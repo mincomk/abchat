@@ -1,0 +1,21 @@
+[package]
+name = "dbridge"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+config = "0.15.19"
+dbridge-engine = { path = "../../crates/dbridge-engine" }
+dbridge-core = { path = "../../crates/dbridge-core" }
+dbridge-error = { path = "../../crates/dbridge-error" }
+dbridge-api = { path = "../../crates/dbridge-api" }
+dbridge-persistence = { path = "../../crates/dbridge-persistence" }
+persistence = { package = "persistence-impl", path = "../../crates/dbridge-persistence-impl" }
+provider-discord = { path = "../../providers/discord" }
+provider-web = { path = "../../providers/web" }
+dotenvy = "0.15.7"
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1.50.0", features = ["full"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
+uuid = { version = "1.22.0", features = ["v4"] }

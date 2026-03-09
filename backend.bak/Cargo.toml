@@ -1,0 +1,32 @@
+[package]
+name = "dbridge"
+version = "0.1.0"
+edition = "2024"
+
+[workspace]
+resolver = "2"
+members = [
+    "crates/dbridge-auth",
+    "crates/dbridge-error",
+    "crates/dbridge-core",
+    "crates/dbridge-persistence",
+    "crates/dbridge-persistence-impl",
+    "crates/dbridge-provider-sdk",
+    "crates/dbridge-api",
+    "crates/dbridge-engine",
+    "providers/discord", 
+    "providers/web",
+]
+
+[dependencies]
+argon2 = "0.5.3"
+dbridge-api = { version = "0.1.0", path = "crates/dbridge-api" }
+dbridge-core = { version = "0.1.0", path = "crates/dbridge-core" }
+dbridge-engine = { version = "0.1.0", path = "crates/dbridge-engine" }
+dbridge-persistence = { version = "0.1.0", path = "crates/dbridge-persistence" }
+dotenvy = "0.15.7"
+provider-discord = { version = "0.1.0", path = "providers/discord" }
+provider-web = { version = "0.1.0", path = "providers/web" }
+tokio = { version = "1.50.0", features = ["full"] }
+tracing = "0.1.44"
+tracing-subscriber = "0.3.22"

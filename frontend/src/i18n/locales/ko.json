@@ -1,0 +1,59 @@
+{
+  "login": {
+    "mode": "비밀번호/토큰 모드 전환",
+    "channel_id": "채널",
+    "username": "사용자",
+    "password": "비밀번호",
+    "nickname": "닉네임",
+    "token": "토큰",
+    "go": "입장",
+    "in": "참가",
+    "failed": "로그인 실패"
+  },
+  "chat": {
+    "admin": "관리",
+    "exit": "나가기",
+    "placeholder": "메시지를 입력하세요...",
+    "send": "전송",
+    "system": {
+      "connected": "채널에 연결되었습니다",
+      "lost": "연결이 끊어졌습니다. 재연결 중...",
+      "joining": "{{nickname}} (@{{username}})님으로 참여 중",
+      "loading": "이전 메시지 불러오는 중...",
+      "loaded": "이전 메시지 {{count}}개를 불러왔습니다",
+      "no_history": "이전 메시지가 없습니다",
+      "failed_history": "메시지 불러오기 실패: {{error}}"
+    }
+  },
+  "admin": {
+    "title": "관리자 패널",
+    "back": "채팅으로 돌아가기",
+    "register": {
+      "title": "새 계정 등록",
+      "username": "사용자 이름",
+      "password": "비밀번호",
+      "nickname": "닉네임",
+      "submit": "등록"
+    },
+    "accounts": {
+      "title": "계정 목록",
+      "username": "사용자 이름",
+      "nickname": "닉네임",
+      "admin": "관리자",
+      "actions": "관리",
+      "delete": "삭제",
+      "loading": "사용자 목록을 불러오는 중...",
+      "none": "사용자가 없습니다."
+    },
+    "errors": {
+      "failed_load": "사용자 목록 불러오기 실패: {{error}}",
+      "failed_register": "등록 실패: {{error}}",
+      "failed_delete": "사용자 삭제 실패: {{error}}",
+      "confirm_delete": "정말 사용자 \"{{username}}\"을(를) 삭제하시겠습니까?"
+    }
+  },
+  "common": {
+    "yes": "예",
+    "no": "아니오"
+  }
+}

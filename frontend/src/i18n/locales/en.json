@@ -1,0 +1,59 @@
+{
+  "login": {
+    "mode": "Toggle Password/Token mode",
+    "channel_id": "CH",
+    "username": "USR",
+    "password": "PWD",
+    "nickname": "NIC",
+    "token": "TKN",
+    "go": "GO",
+    "in": "IN",
+    "failed": "Login failed"
+  },
+  "chat": {
+    "admin": "ADMIN",
+    "exit": "EXIT",
+    "placeholder": "Type a message...",
+    "send": "SEND",
+    "system": {
+      "connected": "Connected to channel",
+      "lost": "Connection lost. Reconnecting...",
+      "joining": "Joining as {{nickname}} (@{{username}})",
+      "loading": "Loading history...",
+      "loaded": "Loaded {{count}} historical messages",
+      "no_history": "No historical messages found",
+      "failed_history": "Failed to load history: {{error}}"
+    }
+  },
+  "admin": {
+    "title": "ADMIN PANEL",
+    "back": "BACK TO CHAT",
+    "register": {
+      "title": "REGISTER NEW ACCOUNT",
+      "username": "Username",
+      "password": "Password",
+      "nickname": "Nickname",
+      "submit": "REGISTER"
+    },
+    "accounts": {
+      "title": "ACCOUNTS",
+      "username": "Username",
+      "nickname": "Nickname",
+      "admin": "Admin",
+      "actions": "Actions",
+      "delete": "DELETE",
+      "loading": "Loading users...",
+      "none": "No users found."
+    },
+    "errors": {
+      "failed_load": "Failed to load users: {{error}}",
+      "failed_register": "Failed to register: {{error}}",
+      "failed_delete": "Failed to delete user: {{error}}",
+      "confirm_delete": "Are you sure you want to delete user \"{{username}}\"?"
+    }
+  },
+  "common": {
+    "yes": "YES",
+    "no": "NO"
+  }
+}

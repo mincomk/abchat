@@ -1,0 +1,16 @@
+[package]
+name = "persistence-impl"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+argon2 = "0.5.3"
+async-trait = "0.1.89"
+dbridge-core = { path = "../dbridge-core" }
+dbridge-error = { path = "../dbridge-error" }
+dbridge-persistence = { path = "../dbridge-persistence" }
+password-hash = "0.5.0"
+rand_core = { version = "0.6.4", features = ["getrandom"] }
+serde = { version = "1.0.228", features = ["derive"] }
+tokio = { version = "1.50.0", features = ["full"] }
+tracing = "0.1.44"
