@@ -2,6 +2,8 @@ use async_trait::async_trait;
 
 use crate::{AppResult, Message, User};
 
+pub mod postgres;
+
 #[async_trait]
 pub trait Persistence: Send + Sync {
     async fn save_user(&self, u: User) -> AppResult<()>;

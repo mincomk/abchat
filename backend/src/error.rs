@@ -1,13 +1,13 @@
 use axum::{
-    Json,
     http::StatusCode,
     response::{IntoResponse, Response},
+    Json,
 };
 use thiserror::Error;
 
-use crate::{ErrorResposne, auth::AuthError};
+use crate::{auth::AuthError, ErrorResposne};
 
-#[derive(Debug, Clone, Error)]
+#[derive(Debug, Error)]
 pub enum UserError {
     #[error("Cannot delete yourself")]
     CannotDeleteYourself,
@@ -16,13 +16,19 @@ pub enum UserError {
     UserNotFound,
 }
 
-#[derive(Debug, Clone, Error)]
+#[derive(Debug, Error)]
 pub enum ServiceError {
     #[error("Redis error: {0}")]
     Redis(#[from] redis::RedisError),
+
+    #[error("Serialization error: {0}")]
+    Json(#[from] serde_json::Error),
+
+    #[error("Database error: {0}")]
+    Database(#[from] sqlx::Error),
 }
 
-#[derive(Debug, Clone, Error)]
+#[derive(Debug, Error)]
 pub enum AppError {
     #[error("AuthError: {0}")]
     Auth(#[from] AuthError),
