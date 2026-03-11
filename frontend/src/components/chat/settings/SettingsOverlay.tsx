@@ -17,10 +17,10 @@ export const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ client, onClos
         <div className="bg-[var(--header-bg)] border-b border-[var(--border-color)] p-2.5 flex flex-wrap gap-4 items-start">
             <PasswordChangeCard client={client} onSuccess={onClose} />
             <NotificationSettingsCard client={client} />
-            
+
             <div className="ml-auto">
                 <Button variant="ghost" className="!h-4 !px-2 !text-[9px]" onClick={onClose}>
-                    {t('change_pwd.cancel')}
+                    {t('change_pwd.close')}
                 </Button>
             </div>
         </div>

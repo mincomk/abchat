@@ -158,10 +158,7 @@ pub struct NotificationBroker {
 }
 
 impl NotificationBroker {
-    pub fn new(
-        session: ChatSession,
-        notification_service: Arc<NotificationService>,
-    ) -> Self {
+    pub fn new(session: ChatSession, notification_service: Arc<NotificationService>) -> Self {
         Self {
             session,
             notification_service,
@@ -196,7 +193,7 @@ impl NotificationBroker {
                         target_modes.push(NotificationMode::Critical);
                     }
 
-                    let title = format!("Message from {}", msg.sender.nickname);
+                    let title = format!("{}", msg.sender.nickname);
                     let body = msg.content.clone();
 
                     if let Err(e) = self

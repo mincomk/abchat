@@ -6,6 +6,7 @@
       "retype": "새 비밀번호 확인",
     "submit": "변경",
     "cancel": "취소",
+    "close": "닫기",
     "success": "비밀번호가 성공적으로 변경되었습니다!",
       "failed": "비밀번호 변경 실패: {{error}}",
       "mismatch": "새 비밀번호가 일치하지 않습니다"

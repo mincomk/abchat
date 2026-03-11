@@ -36,9 +36,6 @@ impl NotificationService {
         let mut subscriptions = self.persistence.get_subscriptions_by_mode(modes).await?;
 
         for username in usernames {
-            // Only add if not already in All/Targeted mode list and if they are in Critical mode
-            // Actually, we can just fetch their subscriptions and let deduplication handle it.
-            // But checking mode first is better for performance.
             let mode = self
                 .persistence
                 .get_user_notification_mode(&username)
@@ -123,7 +120,6 @@ impl NotificationService {
         let mut builder = WebPushMessageBuilder::new(&subscription_info);
         builder.set_payload(ContentEncoding::Aes128Gcm, payload.as_bytes());
 
-        // web-push 0.11.0 VapidSignatureBuilder::from_base64 takes the private key
         let sig_builder =
             VapidSignatureBuilder::from_base64(&self.vapid_private_key, &subscription_info)
                 .map_err(|e: web_push::WebPushError| {

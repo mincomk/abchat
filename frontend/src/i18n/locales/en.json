@@ -6,6 +6,7 @@
       "retype": "RETYPE NEW PWD",
     "submit": "CHANGE",
     "cancel": "CANCEL",
+    "close": "CLOSE",
     "success": "Password changed successfully!",
       "failed": "Failed to change password: {{error}}",
       "mismatch": "New passwords do not match"
