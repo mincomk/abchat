@@ -4,7 +4,7 @@ FROM node:22-alpine AS builder
 WORKDIR /usr/src/frontend
 
 # Install pnpm
-RUN npm install -g pnpm
+RUN corepack enable pnpm
 
 # Copy package files
 COPY package.json pnpm-lock.yaml* ./
@@ -28,6 +28,10 @@ RUN pnpm build
 # Runtime stage
 FROM nginx:stable-alpine
 
+RUN apk add nodejs
+COPY --from=builder /usr/src/frontend/scripts/write-env.js /write-env.js
+COPY entrypoint.sh /entrypoint.sh
+
 # Copy the built files from the build stage
 COPY --from=builder /usr/src/frontend/dist /usr/share/nginx/html
 
@@ -36,4 +40,4 @@ RUN printf 'server {\n    listen 80;\n    location / {\n        root /usr/share/
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/entrypoint.sh"]

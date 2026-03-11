@@ -1,4 +1,5 @@
 import axios, { type AxiosInstance, isAxiosError } from 'axios';
+import { ENV } from '../env';
 
 export interface User {
     username: string;
@@ -22,18 +23,18 @@ export interface LoginResponse {
 }
 
 const getBaseUrl = (): string => {
-    let baseUrl = import.meta.env.VITE_API_BASE_URL;
+    let baseUrl = ENV.VITE_API_BASE_URL;
     if (!baseUrl) {
-        baseUrl = `${window.location.protocol}//${window.location.host}`;
+        baseUrl = `${window.location.protocol}//${window.location.host}/api`;
     }
     return baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
 };
 
 const getWsBaseUrl = (): string => {
-    let baseUrl = import.meta.env.VITE_WS_BACKEND_URL;
+    let baseUrl = ENV.VITE_WS_BACKEND_URL
     if (!baseUrl) {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        baseUrl = `${protocol}//${window.location.host}`;
+        baseUrl = `${protocol}//${window.location.host}/api`;
     }
     return baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
 };
