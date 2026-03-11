@@ -24,17 +24,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = AppConfig::from_env()?;
 
-    let pg = PostgresPersistence::connect(&config.postgres_url).await?;
-    let redis = RedisMessagePubSub::connect(&config.redis_url).await?;
+    let pg = Arc::new(PostgresPersistence::connect(&config.postgres_url).await?);
+    let redis = Arc::new(RedisMessagePubSub::connect(&config.redis_url).await?);
 
     pg.init_db().await?;
 
     tracing::info!("Infrastructure loaded");
 
     let state = AppState {
-        persistence: Arc::new(pg),
-        pubsub: Arc::new(redis),
-        chat_manager: ChatManager::new(),
+        persistence: pg.clone(),
+        pubsub: redis.clone(),
+        chat_manager: ChatManager::new(pg, redis),
         jwt_secret: config.jwt_secret.as_bytes().to_vec(),
     };
 

@@ -57,6 +57,6 @@ impl ChatSession {
     }
 }
 
-fn make_topic(channel_id: &str) -> String {
+pub fn make_topic(channel_id: &str) -> String {
     format!("chat:{}", channel_id)
 }
