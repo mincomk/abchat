@@ -32,9 +32,7 @@ services:
     # Internal only, no ports exposed
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ghcr.io/mincomk/abchat/backend:main
     container_name: abchat-backend
     restart: always
     depends_on:
@@ -47,9 +45,7 @@ services:
       POSTGRES_URL: "postgres://${POSTGRES_USER:-abchat}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-abchat}"
 
   bot:
-    build:
-      context: ./bot
-      dockerfile: Dockerfile
+    image: ghcr.io/mincomk/abchat/bot:main
     container_name: abchat-bot
     restart: always
     depends_on:
@@ -59,14 +55,12 @@ services:
       REDIS_URL: "redis://valkey:6379"
   
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        VITE_WS_BACKEND_URL: ${VITE_WS_BACKEND_URL:-ws://localhost/api}
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost/api}
+    image: ghcr.io/mincomk/abchat/frontend:main
     container_name: abchat-frontend
     restart: always
+    environment:
+      VITE_WS_BACKEND_URL: ${VITE_WS_BACKEND_URL:-ws://localhost/api}
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost/api}
 
 volumes:
   postgres_data:
