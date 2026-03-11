@@ -3,9 +3,12 @@ import 'dotenv/config';
 import { logger } from './lib/logger.js';
 import { pubClient, subClient } from './lib/redis.js';
 import { MessageSchema } from './lib/types.js';
+import { preprocess } from './lib/preprocess.js';
 
 const DISCORD_CHANNEL_ID = process.env['DISCORD_CHANNEL_ID'];
 const ABCHAT_CHANNEL_ID = process.env['ABCHAT_CHANNEL_ID'] || 'bot:messages';
+
+const mainTopic = 'chat:' + ABCHAT_CHANNEL_ID
 
 const client = new Client({
     intents: [
@@ -15,12 +18,14 @@ const client = new Client({
     ],
 });
 
+let sentIds: string[] = [];
+
 client.once(Events.ClientReady, (readyClient) => {
     logger.info(`Ready! Logged in as ${readyClient.user.tag}`);
 });
 
 // --- Redis -> Discord ---
-subClient.subscribe(ABCHAT_CHANNEL_ID, (err) => {
+subClient.subscribe(mainTopic, (err) => {
     if (err) {
         logger.error({ err }, 'Failed to subscribe to Redis channel');
     } else {
@@ -28,15 +33,20 @@ subClient.subscribe(ABCHAT_CHANNEL_ID, (err) => {
     }
 });
 
-subClient.on('message', async (channel, message) => {
-    if (channel !== ABCHAT_CHANNEL_ID) return;
+subClient.on('message', async (topic, message) => {
+    if (topic !== mainTopic) return;
 
     try {
         const data: MessageSchema = JSON.parse(message);
-        const discordChannel = await client.channels.fetch(DISCORD_CHANNEL_ID!);
 
-        if (discordChannel instanceof TextChannel) {
-            await discordChannel.send(`**${data.sender.nickname}**: ${data.content}`);
+        if (sentIds.includes(data.id)) {
+            sentIds = sentIds.filter(id => id != data.id)
+        } else {
+            const discordChannel = client.channels.cache.get(DISCORD_CHANNEL_ID!);
+
+            if (discordChannel instanceof TextChannel) {
+                await discordChannel.send(`**${data.sender.nickname}**: ${data.content}`);
+            }
         }
     } catch (err) {
         logger.error({ err, message }, 'Error processing Redis message');
@@ -49,8 +59,8 @@ client.on(Events.MessageCreate, async (message: Message) => {
 
     const messageData: MessageSchema = {
         id: message.id,
-        content: message.content,
-        timestamp: Math.floor(message.createdTimestamp / 1000),
+        content: message.guild ? preprocess(message.guild, message.content) : message.content,
+        timestamp: message.createdTimestamp,
         channel_id: ABCHAT_CHANNEL_ID,
         sender: {
             username: message.author.username,
@@ -60,7 +70,9 @@ client.on(Events.MessageCreate, async (message: Message) => {
     };
 
     try {
-        await pubClient.publish(ABCHAT_CHANNEL_ID, JSON.stringify(messageData));
+        sentIds.push(message.id)
+        await pubClient.publish(mainTopic, JSON.stringify(messageData));
+
         logger.debug({ messageId: message.id }, 'Published message to Redis');
     } catch (err) {
         logger.error({ err }, 'Failed to publish message to Redis');

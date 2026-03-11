@@ -1,19 +1,19 @@
 import React from 'react';
 
 export interface ChatMessage {
-  id: string;
-  type: 'user' | 'system';
-  systemType?: 'info' | 'error';
-  sender?: {
-    username: string;
-    nickname: string;
-  };
-  content: string;
-  timestamp: number;
+    id: string;
+    type: 'user' | 'system';
+    systemType?: 'info' | 'error';
+    sender?: {
+        username: string;
+        nickname: string;
+    };
+    content: string;
+    timestamp: number;
 }
 
 interface MessageRowProps {
-  msg: ChatMessage;
+    msg: ChatMessage;
 }
 
 const hashString = (str: string): number => {
@@ -27,11 +27,11 @@ const hashString = (str: string): number => {
 
 export const MessageRow: React.FC<MessageRowProps> = ({ msg }) => {
     const isSystem = msg.type === 'system';
-    
-    const senderColor = isSystem 
+
+    const senderColor = isSystem
         ? (msg.systemType === 'error' ? 'text-[var(--error-color)]' : 'text-[var(--accent-color)]')
         : [
-            'text-[#fff]', 'text-[#f00]', 'text-[#0f0]', 'text-[#ff0]', 
+            'text-[#fff]', 'text-[#f00]', 'text-[#0f0]', 'text-[#ff0]',
             'text-[#00f]', 'text-[#f0f]', 'text-[#0ff]', 'text-[#fa0]', 'text-[#a0f]'
         ][hashString(msg.sender!.nickname) % 9];
 
@@ -45,7 +45,7 @@ export const MessageRow: React.FC<MessageRowProps> = ({ msg }) => {
             ) : (
                 <>
                     <span className="text-[#666] text-[10px] min-w-[45px]">
-                        {new Date(msg.timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     <span className={`font-bold min-w-[80px] text-right ${senderColor}`}>
                         &lt;{msg.sender!.nickname}&gt;

@@ -31,8 +31,8 @@ impl PersistenceBroker {
             match self.session.recv().await {
                 Ok(msg) => {
                     if let Err(e) = self.persistence.add_message(msg).await {
-                        // We don't break here, just log. 
-                        // It might be a duplicate message from another node, 
+                        // We don't break here, just log.
+                        // It might be a duplicate message from another node,
                         // which is fine if we have unique constraints.
                         debug!("Failed to persist message (might be duplicate): {:?}", e);
                     }
@@ -93,7 +93,7 @@ impl PubSubBroker {
                         // If we received a message from local, publish it to external
                         // and track its ID to avoid processing it when it comes back.
                         published_ids_fwd.insert(msg.id.clone());
-                        
+
                         // Limit cache size simple way
                         if published_ids_fwd.len() > 1000 {
                             // This is very naive, but helps avoid memory leak for this task
@@ -120,12 +120,12 @@ impl PubSubBroker {
                 match external_sub.next().await {
                     Ok(msg) => {
                         // If we received a message from external, check if we were the one who published it.
-                        if published_ids_recv.contains(&msg.id) {
+                        if published_ids_recv.remove(&msg.id).is_some() {
                             // Already handled, ignore it.
                             continue;
                         }
 
-                        // Send to local session. 
+                        // Send to local session.
                         // This will distribute it to all local clients.
                         session_recv.send(msg).await;
                     }

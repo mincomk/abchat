@@ -21,6 +21,11 @@ pub struct CreateUser {
     pub password: String,
     pub nickname: String,
 }
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct MessageUser {
+    pub username: String,
+    pub nickname: String,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct ErrorResponse {

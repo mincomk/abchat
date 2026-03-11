@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
+use crate::MessageUser;
+
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct User {
     pub username: String,
@@ -14,5 +16,5 @@ pub struct Message {
     pub content: String,
     pub timestamp: u64,
     pub channel_id: String,
-    pub sender: User,
+    pub sender: MessageUser,
 }

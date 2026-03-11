@@ -1,5 +1,5 @@
 use super::Persistence;
-use crate::{AppError, AppResult, Message, ServiceError, User};
+use crate::{AppError, AppResult, Message, MessageUser, ServiceError, User};
 use async_trait::async_trait;
 use sqlx::{PgPool, Row};
 
@@ -40,26 +40,18 @@ impl PostgresPersistence {
                 content TEXT NOT NULL,
                 timestamp BIGINT NOT NULL,
                 channel_id TEXT NOT NULL,
-                sender_username TEXT NOT NULL REFERENCES users(username)
+                sender_username TEXT NOT NULL,
+                sender_nickname TEXT NOT NULL
             )",
         )
         .execute(&self.pool)
         .await
         .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
 
-        sqlx::query(
-            "ALTER TABLE messages ADD COLUMN IF NOT EXISTS sender_username TEXT REFERENCES users(username)",
-        )
-        .execute(&self.pool)
-        .await
-        .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
-
-        sqlx::query(
-            "CREATE INDEX IF NOT EXISTS idx_messages_channel_id ON messages (channel_id)",
-        )
-        .execute(&self.pool)
-        .await
-        .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
+        sqlx::query("CREATE INDEX IF NOT EXISTS idx_messages_channel_id ON messages (channel_id)")
+            .execute(&self.pool)
+            .await
+            .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
 
         Ok(())
     }
@@ -152,14 +144,15 @@ impl Persistence for PostgresPersistence {
 
     async fn add_message(&self, message: Message) -> AppResult<()> {
         sqlx::query(
-            "INSERT INTO messages (id, content, timestamp, channel_id, sender_username)
-            VALUES ($1, $2, $3, $4, $5)",
+            "INSERT INTO messages (id, content, timestamp, channel_id, sender_username, sender_nickname)
+            VALUES ($1, $2, $3, $4, $5, $6)",
         )
         .bind(&message.id)
         .bind(&message.content)
         .bind(message.timestamp as i64)
         .bind(&message.channel_id)
         .bind(&message.sender.username)
+        .bind(&message.sender.nickname)
         .execute(&self.pool)
         .await
         .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
@@ -175,20 +168,19 @@ impl Persistence for PostgresPersistence {
     ) -> AppResult<Vec<Message>> {
         let rows = sqlx::query(
             "SELECT 
-                m.id, m.content, m.timestamp, m.channel_id,
-                u.username, u.nickname, u.is_admin
-            FROM messages m
-            JOIN users u ON m.sender_username = u.username
-            WHERE m.channel_id = $1 
-            ORDER BY m.timestamp DESC 
-            LIMIT $2 OFFSET $3"
+                id, content, timestamp, channel_id,
+                sender_username, sender_nickname
+            FROM messages
+            WHERE channel_id = $1 
+            ORDER BY timestamp DESC 
+            LIMIT $2 OFFSET $3",
         )
         .bind(channel_id)
         .bind(limit as i64)
         .bind(offset as i64)
         .fetch_all(&self.pool)
         .await
-            .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
+        .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
 
         let messages = rows
             .into_iter()
@@ -197,10 +189,9 @@ impl Persistence for PostgresPersistence {
                 content: r.get("content"),
                 timestamp: r.get::<i64, _>("timestamp") as u64,
                 channel_id: r.get("channel_id"),
-                sender: User {
-                    username: r.get("username"),
-                    nickname: r.get("nickname"),
-                    is_admin: r.get("is_admin"),
+                sender: MessageUser {
+                    username: r.get("sender_username"),
+                    nickname: r.get("sender_nickname"),
                 },
             })
             .collect();

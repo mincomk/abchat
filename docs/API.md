@@ -95,7 +95,6 @@ Retrieves historical messages for the web platform.
     "sender": {
       "username": "jdoe",
       "nickname": "John Doe",
-      "is_admin": false
     },
     "content": "Hello everyone!",
     "timestamp": 1710000000,

@@ -1,8 +1,8 @@
 use uuid::Uuid;
 
 use crate::{
-    AppError, AppResult, AppState, Message, User, UserError, WsPacketC2S, auth::AuthError,
-    chat::ChatSession, util,
+    AppError, AppResult, AppState, Message, MessageUser, User, UserError, WsPacketC2S,
+    auth::AuthError, chat::ChatSession, util,
 };
 
 pub async fn handle_packet(
@@ -28,7 +28,10 @@ pub async fn handle_packet(
                 channel_id: channel_id.to_string(),
                 content: msg.content,
                 timestamp: util::now_u64(),
-                sender: user,
+                sender: MessageUser {
+                    username: user.username,
+                    nickname: user.nickname,
+                },
             };
 
             chat.send(message).await;
