@@ -1,5 +1,7 @@
 use super::Persistence;
-use crate::{AppError, AppResult, Message, MessageUser, ServiceError, User};
+use crate::{
+    AppError, AppResult, Message, MessageUser, NotificationMode, ServiceError, Subscription, User,
+};
 use async_trait::async_trait;
 use sqlx::{PgPool, Row};
 
@@ -53,6 +55,28 @@ impl PostgresPersistence {
             .await
             .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
 
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS subscriptions (
+                username TEXT NOT NULL,
+                endpoint TEXT PRIMARY KEY,
+                p256dh TEXT NOT NULL,
+                auth TEXT NOT NULL
+            )",
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
+
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS user_settings (
+                username TEXT PRIMARY KEY,
+                notification_mode TEXT NOT NULL DEFAULT 'All'
+            )",
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
+
         Ok(())
     }
 }
@@ -77,8 +101,10 @@ impl Persistence for PostgresPersistence {
         Ok(())
     }
 
-    async fn list_users(&self) -> AppResult<Vec<User>> {
-        let rows = sqlx::query("SELECT username, nickname, is_admin FROM users")
+    async fn list_users(&self, limit: u32, offset: u32) -> AppResult<Vec<User>> {
+        let rows = sqlx::query("SELECT username, nickname, is_admin FROM users LIMIT $1 OFFSET $2")
+            .bind(limit as i64)
+            .bind(offset as i64)
             .fetch_all(&self.pool)
             .await
             .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
@@ -197,5 +223,99 @@ impl Persistence for PostgresPersistence {
             .collect();
 
         Ok(messages)
+    }
+
+    async fn add_subscription(&self, sub: Subscription) -> AppResult<()> {
+        sqlx::query(
+            "INSERT INTO subscriptions (username, endpoint, p256dh, auth)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (endpoint) DO UPDATE SET
+            username = EXCLUDED.username,
+            p256dh = EXCLUDED.p256dh,
+            auth = EXCLUDED.auth",
+        )
+        .bind(&sub.username)
+        .bind(&sub.endpoint)
+        .bind(&sub.p256dh)
+        .bind(&sub.auth)
+        .execute(&self.pool)
+        .await
+        .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
+
+        Ok(())
+    }
+
+    async fn list_subscriptions(&self, username: &str) -> AppResult<Vec<Subscription>> {
+        let rows = sqlx::query(
+            "SELECT username, endpoint, p256dh, auth FROM subscriptions WHERE username = $1",
+        )
+        .bind(username)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
+
+        let subs = rows
+            .into_iter()
+            .map(|r| Subscription {
+                username: r.get("username"),
+                endpoint: r.get("endpoint"),
+                p256dh: r.get("p256dh"),
+                auth: r.get("auth"),
+            })
+            .collect();
+
+        Ok(subs)
+    }
+
+    async fn delete_subscription(&self, endpoint: &str) -> AppResult<()> {
+        sqlx::query("DELETE FROM subscriptions WHERE endpoint = $1")
+            .bind(endpoint)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
+
+        Ok(())
+    }
+
+    async fn delete_user_subscriptions(&self, username: &str) -> AppResult<()> {
+        sqlx::query("DELETE FROM subscriptions WHERE username = $1")
+            .bind(username)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
+
+        Ok(())
+    }
+
+    async fn get_user_notification_mode(&self, username: &str) -> AppResult<NotificationMode> {
+        let row = sqlx::query("SELECT notification_mode FROM user_settings WHERE username = $1")
+            .bind(username)
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
+
+        Ok(row
+            .map(|r| r.get::<String, _>("notification_mode").into())
+            .unwrap_or(NotificationMode::All))
+    }
+
+    async fn set_user_notification_mode(
+        &self,
+        username: &str,
+        mode: NotificationMode,
+    ) -> AppResult<()> {
+        sqlx::query(
+            "INSERT INTO user_settings (username, notification_mode)
+            VALUES ($1, $2)
+            ON CONFLICT (username) DO UPDATE SET
+            notification_mode = EXCLUDED.notification_mode",
+        )
+        .bind(username)
+        .bind(mode.to_string())
+        .execute(&self.pool)
+        .await
+        .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
+
+        Ok(())
     }
 }

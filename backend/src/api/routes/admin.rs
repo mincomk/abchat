@@ -65,7 +65,7 @@ pub async fn list_users(
     State(state): State<AppState>,
     _admin: AdminUser,
 ) -> AppResult<Json<Vec<User>>> {
-    state.persistence.list_users().await.map(Json)
+    state.persistence.list_users(1000, 0).await.map(Json)
 }
 
 #[utoipa::path(

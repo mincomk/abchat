@@ -13,6 +13,7 @@
   "notifications": {
     "title": "알림 설정",
     "allow": "알림 ALLOW",
+    "enabled": "허용됨",
     "mode": "알림 모드",
     "mode_all": "전체",
     "mode_critical": "중요",

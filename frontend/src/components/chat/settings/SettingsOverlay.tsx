@@ -16,7 +16,7 @@ export const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ client, onClos
     return (
         <div className="bg-[var(--header-bg)] border-b border-[var(--border-color)] p-2.5 flex flex-wrap gap-4 items-start">
             <PasswordChangeCard client={client} onSuccess={onClose} />
-            <NotificationSettingsCard />
+            <NotificationSettingsCard client={client} />
             
             <div className="ml-auto">
                 <Button variant="ghost" className="!h-4 !px-2 !text-[9px]" onClick={onClose}>

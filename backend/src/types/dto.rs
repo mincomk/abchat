@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use crate::User;
+use crate::{NotificationMode, User};
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct LoginRequest {
@@ -46,4 +46,26 @@ pub struct MessageUser {
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct ErrorResponse {
     pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct SubscriptionRequest {
+    pub endpoint: String,
+    pub p256dh: String,
+    pub auth: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct UserSettingsRequest {
+    pub notification_mode: NotificationMode,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct UserSettingsResponse {
+    pub notification_mode: NotificationMode,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct VapidPublicKeyResponse {
+    pub public_key: String,
 }

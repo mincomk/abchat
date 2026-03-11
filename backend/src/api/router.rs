@@ -22,6 +22,11 @@ pub fn create_router(state: AppState) -> Router {
         .routes(routes!(update_user_admin))
         .routes(routes!(list_messages))
         .routes(routes!(register_user))
+        .routes(routes!(subscribe_handler))
+        .routes(routes!(unsubscribe_handler))
+        .routes(routes!(get_settings_handler))
+        .routes(routes!(update_settings_handler))
+        .routes(routes!(get_vapid_key_handler))
         .split_for_parts();
 
     let swagger = SwaggerUi::new("/swagger-ui").url("/openapi.json", api.clone());

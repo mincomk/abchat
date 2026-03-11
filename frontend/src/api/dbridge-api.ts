@@ -39,6 +39,35 @@ const getWsBaseUrl = (): string => {
     return baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
 };
 
+export interface MessageUser {
+    username: string;
+    nickname: string;
+}
+
+export type NotificationMode = 'All' | 'Critical' | 'Off';
+
+export interface NotificationSettings {
+    notification_mode: NotificationMode;
+}
+
+export interface SubscriptionRequest {
+    endpoint: string;
+    p256dh: string;
+    auth: string;
+}
+
+export interface UserSettingsRequest {
+    notification_mode: NotificationMode;
+}
+
+export interface UserSettingsResponse {
+    notification_mode: NotificationMode;
+}
+
+export interface VapidPublicKeyResponse {
+    public_key: string;
+}
+
 export class DBridgeClient {
     #ws: WebSocket | null = null;
     #onMessageCallback: ((msg: Message) => void) | null = null;
@@ -210,6 +239,82 @@ export class DBridgeClient {
                 message = error.message;
             }
             throw new Error(`Failed to delete user: ${message}`);
+        }
+    }
+
+    async subscribeNotifications(data: SubscriptionRequest): Promise<void> {
+        if (!this.#token) throw new Error('Not authenticated');
+        try {
+            await this.#axios.post('notifications/subscribe', data);
+        } catch (error) {
+            let message = 'Unknown error';
+            if (isAxiosError(error)) {
+                message = error.response?.data?.message || error.response?.data || error.message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
+            throw new Error(`Failed to subscribe: ${message}`);
+        }
+    }
+
+    async unsubscribeNotifications(): Promise<void> {
+        if (!this.#token) throw new Error('Not authenticated');
+        try {
+            await this.#axios.post('notifications/unsubscribe');
+        } catch (error) {
+            let message = 'Unknown error';
+            if (isAxiosError(error)) {
+                message = error.response?.data?.message || error.response?.data || error.message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
+            throw new Error(`Failed to unsubscribe: ${message}`);
+        }
+    }
+
+    async getNotificationSettings(): Promise<UserSettingsResponse> {
+        if (!this.#token) throw new Error('Not authenticated');
+        try {
+            const response = await this.#axios.get<UserSettingsResponse>('notifications/settings');
+            return response.data;
+        } catch (error) {
+            let message = 'Unknown error';
+            if (isAxiosError(error)) {
+                message = error.response?.data?.message || error.response?.data || error.message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
+            throw new Error(`Failed to get settings: ${message}`);
+        }
+    }
+
+    async updateNotificationSettings(data: UserSettingsRequest): Promise<void> {
+        if (!this.#token) throw new Error('Not authenticated');
+        try {
+            await this.#axios.put('notifications/settings', data);
+        } catch (error) {
+            let message = 'Unknown error';
+            if (isAxiosError(error)) {
+                message = error.response?.data?.message || error.response?.data || error.message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
+            throw new Error(`Failed to update settings: ${message}`);
+        }
+    }
+
+    async getVapidPublicKey(): Promise<string> {
+        try {
+            const response = await this.#axios.get<VapidPublicKeyResponse>('notifications/vapid-key');
+            return response.data.public_key;
+        } catch (error) {
+            let message = 'Unknown error';
+            if (isAxiosError(error)) {
+                message = error.response?.data?.message || error.response?.data || error.message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
+            throw new Error(`Failed to get VAPID key: ${message}`);
         }
     }
 

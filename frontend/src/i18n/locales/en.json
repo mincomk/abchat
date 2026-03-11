@@ -13,6 +13,7 @@
   "notifications": {
     "title": "NOTIFICATION SETTINGS",
     "allow": "NOTIFY ALLOW",
+    "enabled": "ENABLED",
     "mode": "NOTIFY MODE",
     "mode_all": "ALL",
     "mode_critical": "CRITICAL",

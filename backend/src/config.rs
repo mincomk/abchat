@@ -9,6 +9,9 @@ pub struct AppConfig {
 
     pub admin_username: Option<String>,
     pub admin_password_hash: Option<String>,
+
+    pub vapid_public_key: String,
+    pub vapid_private_key: String,
 }
 
 impl AppConfig {

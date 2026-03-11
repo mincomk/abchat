@@ -38,6 +38,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         pubsub: redis.clone(),
         chat_manager: ChatManager::new(pg, redis),
         jwt_secret: config.jwt_secret.as_bytes().to_vec(),
+        vapid_public_key: config.vapid_public_key.clone(),
+        vapid_private_key: config.vapid_private_key.clone(),
     };
 
     init_admin_account(&config, &state).await?;

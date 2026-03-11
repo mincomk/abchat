@@ -9,3 +9,6 @@ pub mod ws;
 
 pub mod auth;
 pub use auth::*;
+
+pub mod notifications;
+pub use notifications::*;

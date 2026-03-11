@@ -1,24 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../ui/Button';
 import { SettingsCard } from './SettingsCard';
+import { DBridgeClient } from '../../../api/dbridge-api';
 import { 
     requestNotificationPermission, 
     saveNotificationSettings, 
+    getNotificationSettings,
+    checkNotificationPermission,
     type NotificationMode 
 } from '../../../api/notifications';
 
-export const NotificationSettingsCard: React.FC = () => {
+interface NotificationSettingsCardProps {
+    client: DBridgeClient;
+}
+
+export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> = ({ client }) => {
     const { t } = useTranslation();
     const [mode, setMode] = useState<NotificationMode>('all');
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [permission, setPermission] = useState<string>('default');
+
+    useEffect(() => {
+        const init = async () => {
+            try {
+                const status = await checkNotificationPermission();
+                setPermission(status);
+                
+                const settings = await getNotificationSettings(client);
+                setMode(settings.mode);
+            } catch (err) {
+                console.error('Failed to load notification settings', err);
+            }
+        };
+        init();
+    }, [client]);
 
     const handleAllow = async () => {
         setError(null);
         setSuccess(null);
         try {
-            const status = await requestNotificationPermission();
+            const status = await requestNotificationPermission(client);
+            setPermission(status);
             if (status === 'granted') {
                 setSuccess(t('notifications.permission_granted'));
             } else {
@@ -30,10 +54,12 @@ export const NotificationSettingsCard: React.FC = () => {
     };
 
     const handleModeChange = async (newMode: NotificationMode) => {
+        const oldMode = mode;
         setMode(newMode);
         try {
-            await saveNotificationSettings({ mode: newMode });
+            await saveNotificationSettings(client, { mode: newMode });
         } catch (err: any) {
+            setMode(oldMode);
             setError(err.message || 'Error saving settings');
         }
     };
@@ -42,11 +68,12 @@ export const NotificationSettingsCard: React.FC = () => {
         <SettingsCard title={t('notifications.title')}>
             <div className="flex flex-col gap-2">
                 <Button 
-                    variant="secondary" 
+                    variant={permission === 'granted' ? 'ghost' : 'secondary'} 
                     className="!h-6 !text-[9px]" 
                     onClick={handleAllow}
+                    disabled={permission === 'granted'}
                 >
-                    {t('notifications.allow')}
+                    {permission === 'granted' ? t('notifications.enabled') : t('notifications.allow')}
                 </Button>
 
                 <div className="flex flex-col gap-1">

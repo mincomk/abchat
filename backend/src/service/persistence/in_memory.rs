@@ -1,12 +1,14 @@
+use crate::{AppResult, Message, NotificationMode, Subscription, User};
 use async_trait::async_trait;
 use dashmap::DashMap;
-use crate::{AppResult, Message, User};
 use super::Persistence;
 
 pub struct InMemoryPersistence {
     users: DashMap<String, User>,
     passwords: DashMap<String, String>,
     messages: DashMap<String, Vec<Message>>,
+    subscriptions: DashMap<String, Vec<Subscription>>,
+    user_settings: DashMap<String, NotificationMode>,
 }
 
 impl InMemoryPersistence {
@@ -15,6 +17,8 @@ impl InMemoryPersistence {
             users: DashMap::new(),
             passwords: DashMap::new(),
             messages: DashMap::new(),
+            subscriptions: DashMap::new(),
+            user_settings: DashMap::new(),
         }
     }
 }
@@ -26,8 +30,18 @@ impl Persistence for InMemoryPersistence {
         Ok(())
     }
 
-    async fn list_users(&self) -> AppResult<Vec<User>> {
-        Ok(self.users.iter().map(|kv| kv.value().clone()).collect())
+    async fn list_users(&self, limit: u32, offset: u32) -> AppResult<Vec<User>> {
+        let mut users: Vec<User> = self.users.iter().map(|kv| kv.value().clone()).collect();
+        users.sort_by(|a, b| a.username.cmp(&b.username));
+
+        let start = offset as usize;
+        let end = (start + limit as usize).min(users.len());
+
+        if start >= users.len() {
+            return Ok(vec![]);
+        }
+
+        Ok(users[start..end].to_vec())
     }
 
     async fn get_user(&self, username: &str) -> AppResult<Option<User>> {
@@ -37,6 +51,8 @@ impl Persistence for InMemoryPersistence {
     async fn delete_user(&self, username: &str) -> AppResult<()> {
         self.users.remove(username);
         self.passwords.remove(username);
+        self.subscriptions.remove(username);
+        self.user_settings.remove(username);
         Ok(())
     }
 
@@ -72,6 +88,43 @@ impl Persistence for InMemoryPersistence {
         } else {
             Ok(vec![])
         }
+    }
+
+    async fn add_subscription(&self, sub: Subscription) -> AppResult<()> {
+        let mut user_subs = self.subscriptions.entry(sub.username.clone()).or_default();
+        // Remove existing sub with same endpoint if any
+        user_subs.retain(|s| s.endpoint != sub.endpoint);
+        user_subs.push(sub);
+        Ok(())
+    }
+
+    async fn list_subscriptions(&self, username: &str) -> AppResult<Vec<Subscription>> {
+        Ok(self.subscriptions.get(username).map(|s| s.value().clone()).unwrap_or_default())
+    }
+
+    async fn delete_subscription(&self, endpoint: &str) -> AppResult<()> {
+        for mut kv in self.subscriptions.iter_mut() {
+            kv.value_mut().retain(|s| s.endpoint != endpoint);
+        }
+        Ok(())
+    }
+
+    async fn delete_user_subscriptions(&self, username: &str) -> AppResult<()> {
+        self.subscriptions.remove(username);
+        Ok(())
+    }
+
+    async fn get_user_notification_mode(&self, username: &str) -> AppResult<NotificationMode> {
+        Ok(self.user_settings.get(username).map(|s| s.value().clone()).unwrap_or(NotificationMode::All))
+    }
+
+    async fn set_user_notification_mode(
+        &self,
+        username: &str,
+        mode: NotificationMode,
+    ) -> AppResult<()> {
+        self.user_settings.insert(username.to_string(), mode);
+        Ok(())
     }
 }
 
