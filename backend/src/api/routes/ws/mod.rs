@@ -6,7 +6,7 @@ use axum::{
     response::IntoResponse,
 };
 use crate::AppState;
-use session::WsSession;
+use session::WsActor;
 
 pub async fn ws_route(
     State(state): State<AppState>,
@@ -14,7 +14,7 @@ pub async fn ws_route(
     upgrade: WebSocketUpgrade,
 ) -> impl IntoResponse {
     upgrade.on_upgrade(async move |socket| {
-        let session = WsSession::new(state, channel_id);
-        session.handle(socket).await;
+        let actor = WsActor::new(state, channel_id, socket);
+        actor.run().await;
     })
 }

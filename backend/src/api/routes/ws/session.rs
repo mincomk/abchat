@@ -1,6 +1,4 @@
-use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::Mutex;
 use tokio::time::interval;
 use futures_util::{SinkExt, StreamExt, stream::{SplitSink, SplitStream}};
 use axum::extract::ws::{self, WebSocket};
@@ -8,136 +6,56 @@ use tracing::{info, warn, instrument};
 
 use crate::{
     AppState, SessionState, WsError, WsPacketC2S, WsPacketS2C,
-    AppResult,
+    AppResult, service::pubsub::MessageSubscriber,
 };
 use super::handler;
 
-pub struct WsSession {
+pub struct WsActor {
     state: AppState,
     channel_id: String,
-    session_state: Arc<Mutex<SessionState>>,
+    session_state: SessionState,
+    sink: SplitSink<WebSocket, ws::Message>,
+    stream: SplitStream<WebSocket>,
+    subscriber: Option<Box<dyn MessageSubscriber>>,
 }
 
-impl WsSession {
-    pub fn new(state: AppState, channel_id: String) -> Self {
+impl WsActor {
+    pub fn new(state: AppState, channel_id: String, socket: WebSocket) -> Self {
+        let (sink, stream) = socket.split();
         Self {
             state,
             channel_id,
-            session_state: Arc::new(Mutex::new(SessionState::default())),
+            session_state: SessionState::default(),
+            sink,
+            stream,
+            subscriber: None,
         }
     }
 
-    #[instrument(skip(self, socket), fields(channel = %self.channel_id))]
-    pub async fn handle(self, socket: WebSocket) {
-        let (sender, receiver) = socket.split();
-        let sender = Arc::new(Mutex::new(sender));
-
-        let s_state = self.state.clone();
-        let c_id = self.channel_id.clone();
-        let ss = self.session_state.clone();
-        let snd = sender.clone();
-
-        tokio::spawn(async move {
-            Self::run_receiver_loop(receiver, snd, s_state, ss, c_id).await;
-        });
-
-        // We don't spawn the sender loop yet because we need to wait for authentication.
-        // The receiver loop will call `spawn_sender` upon successful identification.
-    }
-
-    async fn run_receiver_loop(
-        mut receiver: SplitStream<WebSocket>,
-        sender: Arc<Mutex<SplitSink<WebSocket, ws::Message>>>,
-        state: AppState,
-        session_state: Arc<Mutex<SessionState>>,
-        channel_id: String,
-    ) {
-        while let Some(msg) = receiver.next().await {
-            match msg {
-                Ok(ws::Message::Text(text)) => {
-                    let packet = match serde_json::from_str::<WsPacketC2S>(&text) {
-                        Ok(p) => p,
-                        Err(e) => {
-                            let _ = Self::send_error(sender.clone(), &format!("Invalid packet: {e}")).await;
-                            continue;
-                        }
-                    };
-
-                    let sender_clone = sender.clone();
-                    let state_clone = state.clone();
-                    let channel_clone = channel_id.clone();
-
-                    let res = handler::handle_packet(
-                        &state,
-                        session_state.clone(),
-                        packet,
-                        &channel_id,
-                        move || {
-                            // On Auth Success, spawn the sender loop and heartbeat
-                            let snd = sender_clone.clone();
-                            let st = state_clone.clone();
-                            let ch = channel_clone.clone();
-                            tokio::spawn(async move {
-                                Self::run_sender_loop(snd, st, ch).await;
-                            });
-                        }
-                    ).await;
-
-                    if let Err(e) = res {
-                        warn!("Error handling packet: {:?}", e);
-                        // Redact internal errors
-                        let msg = if let crate::AppError::Service(_) = e {
-                            "Internal server error"
-                        } else {
-                            &e.to_string()
-                        };
-                        let _ = Self::send_error(sender.clone(), msg).await;
-                    }
-                }
-                Ok(ws::Message::Close(_)) => break,
-                Ok(ws::Message::Ping(p)) => {
-                    let _ = sender.lock().await.send(ws::Message::Pong(p)).await;
-                }
-                Ok(_) => (), // Ignore binary/pong
-                Err(e) => {
-                    warn!("WebSocket receiver error: {:?}", e);
-                    break;
-                }
-            }
-        }
-        info!("WebSocket receiver loop terminated.");
-    }
-
-    async fn run_sender_loop(
-        sender: Arc<Mutex<SplitSink<WebSocket, ws::Message>>>,
-        state: AppState,
-        channel_id: String,
-    ) {
-        let subscriber = match state.pubsub.subscribe(&channel_id).await {
-            Ok(s) => s,
-            Err(e) => {
-                warn!("Failed to subscribe to channel {}: {:?}", channel_id, e);
-                let _ = Self::send_error(sender, "Internal subscription error").await;
-                return;
-            }
-        };
-
+    #[instrument(skip_all, fields(channel = %self.channel_id))]
+    pub async fn run(mut self) {
         let mut heartbeat = interval(Duration::from_secs(30));
-        
+
         loop {
             tokio::select! {
                 _ = heartbeat.tick() => {
-                    let mut s = sender.lock().await;
-                    if let Err(e) = s.send(ws::Message::Ping(vec![].into())).await {
+                    if let Err(e) = self.sink.send(ws::Message::Ping(vec![].into())).await {
                         warn!("Failed to send ping: {:?}", e);
                         break;
                     }
                 }
-                msg = subscriber.next() => {
-                    match msg {
+                
+                res = async {
+                    if let Some(sub) = self.subscriber.as_ref() {
+                        sub.next().await
+                    } else {
+                        std::future::pending().await
+                    }
+                } => {
+                    match res {
                         Ok(msg) => {
                             let packet = WsPacketS2C::Message(msg);
-                            if let Err(e) = Self::send_packet(sender.clone(), packet).await {
+                            if let Err(e) = self.send_packet(packet).await {
                                 warn!("Failed to send message packet: {:?}", e);
                                 break;
                             }
@@ -148,27 +66,75 @@ impl WsSession {
                         }
                     }
                 }
+
+                msg = self.stream.next() => {
+                    match msg {
+                        Some(Ok(ws::Message::Text(text))) => {
+                            if let Err(e) = self.handle_text_message(text.to_string()).await {
+                                warn!("Error handling message: {:?}", e);
+                            }
+                        }
+                        Some(Ok(ws::Message::Close(_))) => break,
+                        Some(Ok(ws::Message::Ping(p))) => {
+                            let _ = self.sink.send(ws::Message::Pong(p)).await;
+                        }
+                        Some(Ok(_)) => (),
+                        Some(Err(e)) => {
+                            warn!("WebSocket error: {:?}", e);
+                            break;
+                        }
+                        None => break,
+                    }
+                }
             }
         }
-        info!("WebSocket sender loop terminated.");
+        info!("WebSocket session terminated.");
     }
 
-    async fn send_packet(
-        sender: Arc<Mutex<SplitSink<WebSocket, ws::Message>>>,
-        packet: WsPacketS2C,
-    ) -> AppResult<()> {
+    async fn handle_text_message(&mut self, text: String) -> AppResult<()> {
+        let packet = match serde_json::from_str::<WsPacketC2S>(&text) {
+            Ok(p) => p,
+            Err(e) => {
+                return self.send_error(&format!("Invalid packet: {e}")).await;
+            }
+        };
+
+        match handler::handle_packet(&self.state, &mut self.session_state, packet, &self.channel_id).await {
+            Ok(auth_success) => {
+                if auth_success {
+                    match self.state.pubsub.subscribe(&self.channel_id).await {
+                        Ok(sub) => {
+                            self.subscriber = Some(sub);
+                        }
+                        Err(e) => {
+                            warn!("Failed to subscribe: {:?}", e);
+                            self.send_error("Internal subscription error").await?;
+                        }
+                    }
+                }
+                Ok(())
+            }
+            Err(e) => {
+                let msg = if let crate::AppError::Service(_) = e {
+                    "Internal server error"
+                } else {
+                    &e.to_string()
+                };
+                self.send_error(msg).await
+            }
+        }
+    }
+
+    async fn send_packet(&mut self, packet: WsPacketS2C) -> AppResult<()> {
         let text = serde_json::to_string(&packet)?;
-        sender.lock().await.send(ws::Message::Text(text.into())).await
+        self.sink.send(ws::Message::Text(text.into())).await
             .map_err(|e| crate::ServiceError::Internal(e.to_string()).into())
     }
 
-    async fn send_error(
-        sender: Arc<Mutex<SplitSink<WebSocket, ws::Message>>>,
-        message: &str,
-    ) -> AppResult<()> {
+    async fn send_error(&mut self, message: &str) -> AppResult<()> {
         let packet = WsPacketS2C::Error(WsError {
             message: message.to_string(),
         });
-        Self::send_packet(sender, packet).await
+        self.send_packet(packet).await
     }
 }

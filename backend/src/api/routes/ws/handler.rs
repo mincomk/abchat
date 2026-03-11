@@ -1,5 +1,3 @@
-use std::sync::Arc;
-use tokio::sync::Mutex;
 use uuid::Uuid;
 
 use crate::{
@@ -10,26 +8,21 @@ use crate::{
 
 pub async fn handle_packet(
     state: &AppState,
-    session_state: Arc<Mutex<SessionState>>,
+    session: &mut SessionState,
     packet: WsPacketC2S,
     channel_id: &str,
-    on_auth_success: impl FnOnce(),
-) -> AppResult<()> {
+) -> AppResult<bool> {
     match packet {
         WsPacketC2S::Identify(identify) => {
-            let mut session = session_state.lock().await;
             if session.username.is_none() {
                 let user = jwt::auth_user(state, &identify.token).await?;
                 session.username.replace(user.username);
-                drop(session); // Release lock before calling callback
-                on_auth_success();
-                Ok(())
+                Ok(true)
             } else {
                 Err(AuthError::AlreadyAuthenticated.into())
             }
         }
         WsPacketC2S::SendMessage(msg) => {
-            let session = session_state.lock().await;
             if session.username.is_none() {
                 return Err(AuthError::Unauthorized.into());
             }
@@ -49,7 +42,7 @@ pub async fn handle_packet(
                 tracing::warn!("Failed to publish message: {e}");
             }
 
-            Ok(())
+            Ok(false)
         }
     }
 }
