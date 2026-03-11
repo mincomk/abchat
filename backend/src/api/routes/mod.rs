@@ -1,3 +1,6 @@
+pub mod channels;
+pub use channels::*;
+
 pub mod admin;
 pub use admin::*;
 

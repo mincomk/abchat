@@ -15,7 +15,8 @@ pub fn create_router(state: AppState) -> Router {
             list_users,
             delete_user,
             login_handler,
-            register_user
+            register_user,
+            list_messages
         ))
         .split_for_parts();
 

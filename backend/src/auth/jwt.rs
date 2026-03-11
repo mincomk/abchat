@@ -48,3 +48,7 @@ pub async fn auth_user(state: &AppState, token: &str) -> AppResult<User> {
 
     Ok(user)
 }
+
+pub fn auth_claims(secret: &[u8], token: &str) -> AppResult<Claims> {
+    verify_token(secret, token)
+}

@@ -46,6 +46,13 @@ impl PostgresPersistence {
         .await
         .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
 
+        sqlx::query(
+            "CREATE INDEX IF NOT EXISTS idx_messages_channel_id ON messages (channel_id)",
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
+
         Ok(())
     }
 }

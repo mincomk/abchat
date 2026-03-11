@@ -23,6 +23,10 @@ pub async fn register_user(
     _admin: AdminUser,
     Json(payload): Json<RegisterRequest>,
 ) -> AppResult<StatusCode> {
+    if state.persistence.get_user(&payload.username).await?.is_some() {
+        return Err(UserError::UserAlreadyExists.into());
+    }
+
     let password_hash = hash_password(&payload.password)?;
 
     let user = User {
@@ -71,10 +75,10 @@ pub async fn list_users(
 )]
 pub async fn delete_user(
     State(state): State<AppState>,
-    AdminUser(user): AdminUser,
+    AdminUser(claims): AdminUser,
     Path(username): Path<String>,
 ) -> AppResult<StatusCode> {
-    if user.username == username {
+    if claims.sub == username {
         return Err(UserError::CannotDeleteYourself.into());
     }
 
