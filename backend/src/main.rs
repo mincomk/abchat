@@ -33,6 +33,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let state = AppState {
         persistence: Arc::new(pg),
+        pubsub: Arc::new(redis),
         chat_manager: ChatManager::new(),
         jwt_secret: config.jwt_secret.as_bytes().to_vec(),
     };

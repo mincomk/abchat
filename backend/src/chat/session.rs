@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
 use dashmap::DashSet;
-use pubsub_rs::{Pubsub, PubsubError, Subscriber};
+use pubsub_rs::{Pubsub, Subscriber};
 
-use crate::{AppError, AppResult, Message, ServiceError};
+use crate::{Message, ServiceError};
 
 #[derive(Clone)]
 pub struct ChatSession {
