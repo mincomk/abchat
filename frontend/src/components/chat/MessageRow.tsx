@@ -71,7 +71,7 @@ export const MessageRow: React.FC<MessageRowProps> = ({ msg }) => {
     const senderColor = isSystem
         ? (msg.systemType === 'error' ? 'text-[var(--error-color)]' : 'text-[var(--accent-color)]')
         : [
-            'text-[#fff]', 'text-[#f00]', 'text-[#0f0]', 'text-[#ff0]',
+            'text-[var(--text-color)]', 'text-[#f00]', 'text-[#0f0]', 'text-[#ff0]',
             'text-[#00f]', 'text-[#f0f]', 'text-[#0ff]', 'text-[#fa0]', 'text-[#a0f]'
         ][hashString(msg.sender!.nickname) % 9];
 
@@ -79,14 +79,14 @@ export const MessageRow: React.FC<MessageRowProps> = ({ msg }) => {
         <div className="flex gap-1.5 leading-tight">
             {isSystem ? (
                 <>
-                    <span className="text-[#666] text-[10px] min-w-[45px]">[SYSTEM]</span>
+                    <span className="text-[var(--secondary-text-color)] text-[10px] min-w-[45px]">[SYSTEM]</span>
                     <span className={`flex-1 break-all ${senderColor}`}>
                         <FormattedMessage content={msg.content} />
                     </span>
                 </>
             ) : (
                 <>
-                    <span className="text-[#666] text-[10px] min-w-[45px]">
+                    <span className="text-[var(--secondary-text-color)] text-[10px] min-w-[45px]">
                         {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     <span className={`font-bold min-w-[80px] text-right ${senderColor}`}>

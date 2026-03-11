@@ -65,14 +65,14 @@ export const AdminPage: React.FC<AdminProps> = ({ client, currentUsername, onBac
   };
 
   return (
-    <div className="flex flex-col p-5 overflow-y-auto w-full h-full">
+    <div className="flex flex-col p-5 overflow-y-auto w-full h-full bg-[var(--bg-color)]">
       <div className="flex justify-between items-center mb-5 border-b-2 border-[var(--accent-color)] pb-2.5">
         <h2 className="m-0 text-[var(--accent-color)] font-bold text-xl">{t('admin.title')}</h2>
         <Button variant="ghost" className="!h-auto !py-1.5 !px-2.5" onClick={onBack}>{t('admin.back')}</Button>
       </div>
       <div className="flex flex-col gap-[30px]">
         <section>
-          <h3 className="mb-2 text-[#666] font-bold">{t('admin.register.title')}</h3>
+          <h3 className="mb-2 text-[var(--secondary-text-color)] font-bold">{t('admin.register.title')}</h3>
           <form className="flex gap-2.5 flex-wrap" onSubmit={handleRegister}>
             <Input 
               type="text" 
@@ -102,7 +102,7 @@ export const AdminPage: React.FC<AdminProps> = ({ client, currentUsername, onBac
           </form>
         </section>
         <section>
-          <h3 className="mb-2 text-[#666] font-bold">{t('admin.accounts.title')}</h3>
+          <h3 className="mb-2 text-[var(--secondary-text-color)] font-bold">{t('admin.accounts.title')}</h3>
           <div className="overflow-x-auto">
             {loading ? (
               <div className="py-2.5">{t('admin.accounts.loading')}</div>

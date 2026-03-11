@@ -15,10 +15,10 @@ export const UserTable: React.FC<UserTableProps> = ({ users, currentUsername, on
     <table className="w-full border-collapse mt-2.5">
       <thead>
         <tr>
-          <th className="text-left p-2 border-b border-[var(--border-color)] text-[#666] text-[12px]">{t('admin.accounts.username')}</th>
-          <th className="text-left p-2 border-b border-[var(--border-color)] text-[#666] text-[12px]">{t('admin.accounts.nickname')}</th>
-          <th className="text-left p-2 border-b border-[var(--border-color)] text-[#666] text-[12px]">{t('admin.accounts.admin')}</th>
-          <th className="text-left p-2 border-b border-[var(--border-color)] text-[#666] text-[12px]">{t('admin.accounts.actions')}</th>
+          <th className="text-left p-2 border-b border-[var(--border-color)] text-[var(--secondary-text-color)] text-[12px]">{t('admin.accounts.username')}</th>
+          <th className="text-left p-2 border-b border-[var(--border-color)] text-[var(--secondary-text-color)] text-[12px]">{t('admin.accounts.nickname')}</th>
+          <th className="text-left p-2 border-b border-[var(--border-color)] text-[var(--secondary-text-color)] text-[12px]">{t('admin.accounts.admin')}</th>
+          <th className="text-left p-2 border-b border-[var(--border-color)] text-[var(--secondary-text-color)] text-[12px]">{t('admin.accounts.actions')}</th>
         </tr>
       </thead>
       <tbody>

@@ -9,7 +9,27 @@ const App: React.FC = () => {
     const [user, setUser] = useState<User | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        const saved = localStorage.getItem('dbridge_theme');
+        return saved ? saved === 'dark' : true;
+    });
     const clientRef = useRef<DBridgeClient | null>(null);
+
+    const toggleTheme = useCallback(() => {
+        setIsDarkMode(prev => {
+            const next = !prev;
+            localStorage.setItem('dbridge_theme', next ? 'dark' : 'light');
+            return next;
+        });
+    }, []);
+
+    useEffect(() => {
+        if (isDarkMode) {
+            document.documentElement.classList.remove('light-mode');
+        } else {
+            document.documentElement.classList.add('light-mode');
+        }
+    }, [isDarkMode]);
 
     const handleLogin = useCallback(async (data: LoginData) => {
         const client = new DBridgeClient(data.channelId);
@@ -87,7 +107,7 @@ const App: React.FC = () => {
     }, []);
 
     return (
-        <div className="w-full h-full relative overflow-hidden flex justify-center items-center">
+        <div className="w-full h-full relative overflow-hidden flex justify-center items-center bg-[var(--bg-color)]">
             {error && (
                 <div className="fixed top-0 left-0 right-0 text-[var(--error-color)] text-[10px] text-center p-0.5 bg-black/80 z-[10000]">
                     {error}
@@ -99,6 +119,8 @@ const App: React.FC = () => {
                     client={clientRef.current}
                     username={user.username}
                     nickname={user.nickname}
+                    isDarkMode={isDarkMode}
+                    onToggleTheme={toggleTheme}
                     onAdmin={user.is_admin ? handleAdminClick : undefined}
                     onLogout={handleLogout}
                 />
@@ -110,7 +132,7 @@ const App: React.FC = () => {
                     onBack={handleBackToChat}
                 />
             )}
-            <div className="fixed bottom-0.5 right-0.5 text-[12px] text-[#666] pointer-events-none z-[9999]">
+            <div className="fixed bottom-0.5 right-0.5 text-[12px] text-[var(--secondary-text-color)] pointer-events-none z-[9999]">
                 {windowSize.width}x{windowSize.height}
             </div>
         </div>

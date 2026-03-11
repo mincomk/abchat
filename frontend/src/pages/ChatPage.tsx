@@ -9,11 +9,13 @@ interface ChatProps {
     client: DBridgeClient;
     username: string;
     nickname: string;
+    isDarkMode: boolean;
+    onToggleTheme: () => void;
     onAdmin?: () => void;
     onLogout?: () => void;
 }
 
-export const ChatPage: React.FC<ChatProps> = ({ client, username, nickname, onAdmin, onLogout }) => {
+export const ChatPage: React.FC<ChatProps> = ({ client, username, nickname, isDarkMode, onToggleTheme, onAdmin, onLogout }) => {
     const { t } = useTranslation();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [inputValue, setInputValue] = useState('');
@@ -137,10 +139,13 @@ export const ChatPage: React.FC<ChatProps> = ({ client, username, nickname, onAd
 
     return (
         <div className="w-full h-full grid grid-rows-[25px_1fr_35px]">
-            <div className="flex justify-between items-center px-2.5 bg-[#111] border-b border-[var(--border-color)] text-[11px]">
+            <div className="flex justify-between items-center px-2.5 bg-[var(--header-bg)] border-b border-[var(--border-color)] text-[11px]">
                 <span className="text-[var(--accent-color)] font-bold">#{client.channelId}</span>
                 <div className="flex gap-1.5">
                     {onAdmin && <Button variant="ghost" className="!h-4 !px-1 !text-[9px]" onClick={onAdmin}>{t('chat.admin')}</Button>}
+                    <Button variant="ghost" className="!h-4 !px-1 !text-[9px]" onClick={onToggleTheme}>
+                        {isDarkMode ? 'DARK' : 'LIGHT'}
+                    </Button>
                     {onLogout && <Button variant="ghost" className="!h-4 !px-1 !text-[9px]" onClick={onLogout}>{t('chat.exit')}</Button>}
                 </div>
             </div>

@@ -7,6 +7,23 @@
   --error-color: #f00;
   --input-bg: #111;
   --border-color: #333;
+  --header-bg: #111;
+  --button-ghost-bg: #333;
+  --button-secondary-bg: #222;
+  --secondary-text-color: #666;
+}
+
+:root.light-mode {
+  --bg-color: #f5f5f5;
+  --text-color: #1a1a1a;
+  --accent-color: #2563eb;
+  --error-color: #dc2626;
+  --input-bg: #fff;
+  --border-color: #cbd5e1;
+  --header-bg: #e2e8f0;
+  --button-ghost-bg: #e2e8f0;
+  --button-secondary-bg: #f1f5f9;
+  --secondary-text-color: #475569;
 }
 
 html, body {
