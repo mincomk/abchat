@@ -1,4 +1,26 @@
 {
+  "change_pwd": {
+    "title": "CHANGE PASSWORD",
+    "old": "OLD PWD",
+      "new": "NEW PWD",
+      "retype": "RETYPE NEW PWD",
+    "submit": "CHANGE",
+    "cancel": "CANCEL",
+    "success": "Password changed successfully!",
+      "failed": "Failed to change password: {{error}}",
+      "mismatch": "New passwords do not match"
+  },
+  "notifications": {
+    "title": "NOTIFICATION SETTINGS",
+    "allow": "NOTIFY ALLOW",
+    "mode": "NOTIFY MODE",
+    "mode_all": "ALL",
+    "mode_critical": "CRITICAL",
+    "mode_off": "OFF",
+    "off_warning": "Switching off notifications is not recommended.",
+    "permission_granted": "Notification permission granted!",
+    "permission_denied": "Notification permission denied."
+  },
   "login": {
     "mode": "Toggle Password/Token mode",
     "channel_id": "CH",
@@ -13,6 +35,7 @@
   "chat": {
     "admin": "ADMIN",
     "exit": "EXIT",
+    "settings": "SETTINGS",
     "placeholder": "Type a message...",
     "send": "SEND",
     "system": {
@@ -33,7 +56,8 @@
       "username": "Username",
       "password": "Password",
       "nickname": "Nickname",
-      "submit": "REGISTER"
+      "submit": "REGISTER",
+      "gen": "GEN"
     },
     "accounts": {
       "title": "ACCOUNTS",
@@ -42,6 +66,7 @@
       "admin": "Admin",
       "actions": "Actions",
       "delete": "DELETE",
+      "pwd": "PWD",
       "loading": "Loading users...",
       "none": "No users found."
     },
@@ -49,7 +74,10 @@
       "failed_load": "Failed to load users: {{error}}",
       "failed_register": "Failed to register: {{error}}",
       "failed_delete": "Failed to delete user: {{error}}",
-      "confirm_delete": "Are you sure you want to delete user \"{{username}}\"?"
+      "confirm_delete": "Are you sure you want to delete user \"{{username}}\"?",
+      "change_pwd_title": "CHANGE PASSWORD FOR {{username}}",
+      "change_pwd_success": "User password changed successfully!",
+      "toggle_admin_success": "User admin status updated successfully!"
     }
   },
   "common": {

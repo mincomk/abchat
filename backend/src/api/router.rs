@@ -1,4 +1,4 @@
-use axum::{Router, routing::get};
+use axum::{routing::get, Router};
 
 use tower_http::{
     cors::{Any, CorsLayer},
@@ -14,7 +14,12 @@ use super::routes::*;
 
 pub fn create_router(state: AppState) -> Router {
     let (router, api): (Router<_>, OpenApi) = OpenApiRouter::new()
-        .routes(routes!(list_users, delete_user, login_handler,))
+        .routes(routes!(list_users))
+        .routes(routes!(delete_user))
+        .routes(routes!(login_handler))
+        .routes(routes!(change_password_handler))
+        .routes(routes!(admin_change_password))
+        .routes(routes!(update_user_admin))
         .routes(routes!(list_messages))
         .routes(routes!(register_user))
         .split_for_parts();

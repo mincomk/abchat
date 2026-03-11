@@ -4,6 +4,7 @@ import { DBridgeClient, type Message } from '../api/dbridge-api';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { MessageRow, type ChatMessage } from '../components/chat/MessageRow';
+import { SettingsOverlay } from '../components/chat/settings/SettingsOverlay';
 
 interface ChatProps {
     client: DBridgeClient;
@@ -19,6 +20,8 @@ export const ChatPage: React.FC<ChatProps> = ({ client, username, nickname, isDa
     const { t } = useTranslation();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [inputValue, setInputValue] = useState('');
+    const [showSettings, setShowSettings] = useState(false);
+
     const messageListRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -138,10 +141,13 @@ export const ChatPage: React.FC<ChatProps> = ({ client, username, nickname, isDa
     };
 
     return (
-        <div className="w-full h-full grid grid-rows-[25px_1fr_35px] pb-safe">
+        <div className="w-full h-full grid grid-rows-[25px_auto_1fr_35px] pb-safe">
             <div className="flex justify-between items-center px-2.5 bg-[var(--header-bg)] border-b border-[var(--border-color)] text-[11px]">
                 <span className="text-[var(--accent-color)] font-bold">#{client.channelId}</span>
                 <div className="flex gap-1.5">
+                    <Button variant="ghost" className="!h-4 !px-1 !text-[9px]" onClick={() => setShowSettings(!showSettings)}>
+                        {t('chat.settings')}
+                    </Button>
                     {onAdmin && <Button variant="ghost" className="!h-4 !px-1 !text-[9px]" onClick={onAdmin}>{t('chat.admin')}</Button>}
                     <Button variant="ghost" className="!h-4 !px-1 !text-[9px]" onClick={onToggleTheme}>
                         {isDarkMode ? 'DARK' : 'LIGHT'}
@@ -149,6 +155,12 @@ export const ChatPage: React.FC<ChatProps> = ({ client, username, nickname, isDa
                     {onLogout && <Button variant="ghost" className="!h-4 !px-1 !text-[9px]" onClick={onLogout}>{t('chat.exit')}</Button>}
                 </div>
             </div>
+            {showSettings && (
+                <SettingsOverlay 
+                    client={client} 
+                    onClose={() => setShowSettings(false)} 
+                />
+            )}
             <div className="overflow-y-auto p-1.5 flex flex-col gap-0.5 scrollbar-thin scrollbar-thumb-[var(--border-color)] scrollbar-track-transparent" ref={messageListRef}>
                 {messages.map((msg) => (
                     <MessageRow key={msg.id} msg={msg} />

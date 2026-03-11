@@ -1,11 +1,13 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router';
 import { LoginPage as Login, type LoginData } from './pages/LoginPage';
 import { ChatPage as Chat } from './pages/ChatPage';
 import { AdminPage as Admin } from './pages/AdminPage';
 import { DBridgeClient, type User } from './api/dbridge-api';
 
 const App: React.FC = () => {
-    const [screen, setScreen] = useState<'login' | 'chat' | 'admin'>('login');
+    const navigate = useNavigate();
+    const location = useLocation();
     const [user, setUser] = useState<User | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
@@ -56,11 +58,16 @@ const App: React.FC = () => {
                 throw new Error('Missing password or token');
             }
 
-            setScreen('chat');
+            // Redirect based on current location
+            if (location.pathname === '/admin' && user?.is_admin) {
+                // Stay on admin
+            } else {
+                navigate('/');
+            }
         } catch (error: any) {
             setError(`${error.message}`);
         }
-    }, []);
+    }, [location.pathname, navigate]);
 
     const handleLogout = useCallback(() => {
         if (clientRef.current) {
@@ -69,8 +76,8 @@ const App: React.FC = () => {
             clientRef.current = null;
         }
         setUser(null);
-        setScreen('login');
-    }, []);
+        navigate('/');
+    }, [navigate]);
 
     useEffect(() => {
         const handleResize = () => {
@@ -91,7 +98,6 @@ const App: React.FC = () => {
                     nickname: creds.nickname,
                     is_admin: creds.is_admin
                 });
-                setScreen('chat');
             }
         }
 
@@ -99,12 +105,18 @@ const App: React.FC = () => {
     }, []);
 
     const handleAdminClick = useCallback(() => {
-        setScreen('admin');
-    }, []);
+        navigate('/admin');
+    }, [navigate]);
 
     const handleBackToChat = useCallback(() => {
-        setScreen('chat');
-    }, []);
+        navigate('/');
+    }, [navigate]);
+
+    useEffect(() => {
+        if (location.pathname === '/admin' && user && !user.is_admin) {
+            navigate('/');
+        }
+    }, [location.pathname, user, navigate]);
 
     return (
         <div className="w-full h-full relative overflow-hidden flex justify-center items-center bg-[var(--bg-color)]">
@@ -113,24 +125,39 @@ const App: React.FC = () => {
                     {error}
                 </div>
             )}
-            {screen === 'login' && <Login onLogin={handleLogin} />}
-            {screen === 'chat' && user && clientRef.current && (
-                <Chat
-                    client={clientRef.current}
-                    username={user.username}
-                    nickname={user.nickname}
-                    isDarkMode={isDarkMode}
-                    onToggleTheme={toggleTheme}
-                    onAdmin={user.is_admin ? handleAdminClick : undefined}
-                    onLogout={handleLogout}
-                />
-            )}
-            {screen === 'admin' && user && clientRef.current && (
-                <Admin
-                    client={clientRef.current}
-                    currentUsername={user.username}
-                    onBack={handleBackToChat}
-                />
+            {(!user || !clientRef.current) ? (
+                <Login onLogin={handleLogin} />
+            ) : (
+                <Routes>
+                    <Route
+                        path="/"
+                        element={
+                            <Chat
+                                client={clientRef.current}
+                                username={user.username}
+                                nickname={user.nickname}
+                                isDarkMode={isDarkMode}
+                                onToggleTheme={toggleTheme}
+                                onAdmin={user.is_admin ? handleAdminClick : undefined}
+                                onLogout={handleLogout}
+                            />
+                        }
+                    />
+                    <Route
+                        path="/admin"
+                        element={
+                            user.is_admin ? (
+                                <Admin
+                                    client={clientRef.current}
+                                    currentUsername={user.username}
+                                    onBack={handleBackToChat}
+                                />
+                            ) : (
+                                <Navigate to="/" />
+                            )
+                        }
+                    />
+                </Routes>
             )}
             <div className="fixed bottom-0.5 right-0.5 text-[12px] text-[var(--secondary-text-color)] pointer-events-none z-[9999]">
                 {windowSize.width}x{windowSize.height}

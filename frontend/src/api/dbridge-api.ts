@@ -141,11 +141,59 @@ export class DBridgeClient {
         } catch (error) {
             let message = 'Unknown error';
             if (isAxiosError(error)) {
-                message = error.response?.data || error.message;
+                message = error.response?.data?.message || error.response?.data || error.message;
             } else if (error instanceof Error) {
                 message = error.message;
             }
             throw new Error(`Failed to register user: ${message}`);
+        }
+    }
+
+    async changePassword(old_password: string, new_password: string): Promise<void> {
+        if (!this.#token) throw new Error('Not authenticated');
+
+        try {
+            await this.#axios.post('auth/change-password', { old_password, new_password });
+        } catch (error) {
+            let message = 'Unknown error';
+            if (isAxiosError(error)) {
+                message = error.response?.data?.message || error.response?.data || error.message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
+            throw new Error(`Failed to change password: ${message}`);
+        }
+    }
+
+    async adminChangePassword(username: string, new_password: string): Promise<void> {
+        if (!this.#token) throw new Error('Not authenticated');
+
+        try {
+            await this.#axios.post(`admin/accounts/${username}/password`, { new_password });
+        } catch (error) {
+            let message = 'Unknown error';
+            if (isAxiosError(error)) {
+                message = error.response?.data?.message || error.response?.data || error.message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
+            throw new Error(`Failed to change user password: ${message}`);
+        }
+    }
+
+    async updateUserAdmin(username: string, is_admin: boolean): Promise<void> {
+        if (!this.#token) throw new Error('Not authenticated');
+
+        try {
+            await this.#axios.patch(`admin/accounts/${username}/admin`, { is_admin });
+        } catch (error) {
+            let message = 'Unknown error';
+            if (isAxiosError(error)) {
+                message = error.response?.data?.message || error.response?.data || error.message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
+            throw new Error(`Failed to update user admin status: ${message}`);
         }
     }
 

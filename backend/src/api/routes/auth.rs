@@ -1,6 +1,8 @@
+use axum::http::StatusCode;
+
 use crate::{
-    AppResult, AppState, LoginRequest, LoginResponse,
-    auth::{AuthError, hash::verify_password, jwt::sign_token},
+    AppResult, AppState, ChangePasswordRequest, LoginRequest, LoginResponse, User, UserError,
+    auth::{AuthError, hash::{hash_password, verify_password}, jwt::sign_token},
 };
 use axum::{Json, extract::State};
 
@@ -36,4 +38,36 @@ pub async fn login_handler(
     let token = sign_token(&state.jwt_secret, &user.username, user.is_admin)?;
 
     Ok(Json(LoginResponse { token, user }))
+}
+
+#[utoipa::path(
+    post,
+    path = "/auth/change-password",
+    tag = "auth",
+    security(("bearer_auth" = [])),
+    request_body = ChangePasswordRequest,
+    responses(
+        (status = 200, description = "Password changed successfully"),
+        (status = 401, description = "Invalid old password"),
+    )
+)]
+pub async fn change_password_handler(
+    State(state): State<AppState>,
+    user: User,
+    Json(payload): Json<ChangePasswordRequest>,
+) -> AppResult<StatusCode> {
+    let hash = state.persistence.get_password_hash(&user.username).await?;
+    let hash_str = match &hash {
+        Some(h) => h,
+        None => return Err(AuthError::InvalidCredentials.into()), // Should not happen for authenticated user
+    };
+
+    if !verify_password(hash_str, &payload.old_password)? {
+        return Err(UserError::InvalidOldPassword.into());
+    }
+
+    let new_hash = hash_password(&payload.new_password)?;
+    state.persistence.set_password_hash(&user.username, &new_hash).await?;
+
+    Ok(StatusCode::OK)
 }

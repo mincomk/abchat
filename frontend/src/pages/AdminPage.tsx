@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DBridgeClient, type User } from '../api/dbridge-api';
+import { generateRandomPassword } from '../util/password';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { UserTable } from '../components/admin/UserTable';
@@ -20,6 +21,11 @@ export const AdminPage: React.FC<AdminProps> = ({ client, currentUsername, onBac
   const [regUsername, setRegUsername] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regNickname, setRegNickname] = useState('');
+
+  const [pwdTargetUsername, setPwdTargetUsername] = useState<string | null>(null);
+  const [newPwd, setNewPwd] = useState('');
+  const [retypeNewPwd, setRetypeNewPwd] = useState('');
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -49,6 +55,38 @@ export const AdminPage: React.FC<AdminProps> = ({ client, currentUsername, onBac
       loadUsers();
     } catch (err: any) {
       setError(t('admin.errors.failed_register', { error: err.message }));
+    }
+  };
+
+  const handleAdminChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pwdTargetUsername) return;
+    setError(null);
+    setSuccessMsg(null);
+    if (newPwd !== retypeNewPwd) {
+        setError(t('change_pwd.mismatch'));
+        return;
+    }
+    try {
+      await client.adminChangePassword(pwdTargetUsername, newPwd);
+      setSuccessMsg(t('admin.errors.change_pwd_success'));
+      setNewPwd('');
+      setRetypeNewPwd('');
+      setPwdTargetUsername(null);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleToggleAdmin = async (username: string, is_admin: boolean) => {
+    setError(null);
+    setSuccessMsg(null);
+    try {
+      await client.updateUserAdmin(username, is_admin);
+      setSuccessMsg(t('admin.errors.toggle_admin_success'));
+      loadUsers();
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
@@ -82,14 +120,24 @@ export const AdminPage: React.FC<AdminProps> = ({ client, currentUsername, onBac
               onChange={(e) => setRegUsername(e.target.value)}
               required 
             />
-            <Input 
-              type="password" 
-              placeholder={t('admin.register.password')} 
-              className="!h-auto !py-1 !px-1.5"
-              value={regPassword} 
-              onChange={(e) => setRegPassword(e.target.value)}
-              required 
-            />
+            <div className="flex gap-1">
+              <Input 
+                type="password" 
+                placeholder={t('admin.register.password')} 
+                className="!h-auto !py-1 !px-1.5"
+                value={regPassword} 
+                onChange={(e) => setRegPassword(e.target.value)}
+                required 
+              />
+              <Button 
+                type="button" 
+                variant="secondary" 
+                className="!h-auto !py-1 !px-2"
+                onClick={() => setRegPassword(generateRandomPassword())}
+              >
+                {t('admin.register.gen')}
+              </Button>
+            </div>
             <Input 
               type="text" 
               placeholder={t('admin.register.nickname')} 
@@ -101,6 +149,57 @@ export const AdminPage: React.FC<AdminProps> = ({ client, currentUsername, onBac
             <Button type="submit" className="!h-auto !py-1 !px-4">{t('admin.register.submit')}</Button>
           </form>
         </section>
+        {pwdTargetUsername && (
+          <section className="bg-[var(--header-bg)] p-3 border border-[var(--border-color)] rounded">
+            <h3 className="mb-2 text-[var(--accent-color)] font-bold">
+              {t('admin.errors.change_pwd_title', { username: pwdTargetUsername })}
+            </h3>
+            <form className="flex gap-2.5" onSubmit={handleAdminChangePassword}>
+              <Input
+                type="password"
+                placeholder={t('admin.register.password')}
+                className="!h-auto !py-1 !px-1.5 flex-1"
+                value={newPwd}
+                onChange={(e) => setNewPwd(e.target.value)}
+                required
+              />
+              <Input
+                type="password"
+                placeholder={t('change_pwd.retype')}
+                className="!h-auto !py-1 !px-1.5 flex-1"
+                value={retypeNewPwd}
+                onChange={(e) => setRetypeNewPwd(e.target.value)}
+                required
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                className="!h-auto !py-1 !px-2"
+                onClick={() => {
+                    const p = generateRandomPassword();
+                    setNewPwd(p);
+                    setRetypeNewPwd(p);
+                }}
+              >
+                {t('admin.register.gen')}
+              </Button>
+              <Button type="submit" variant="ghost" className="!h-auto !py-1 !px-4">{t('change_pwd.submit')}</Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="!h-auto !py-1 !px-4"
+                onClick={() => { setPwdTargetUsername(null); setNewPwd(''); }}
+              >
+                {t('change_pwd.cancel')}
+              </Button>
+            </form>
+          </section>
+        )}
+        {successMsg && (
+          <div className="bg-green-900/20 text-green-500 p-2 border border-green-900/50 rounded text-[12px]">
+            {successMsg}
+          </div>
+        )}
         <section>
           <h3 className="mb-2 text-[var(--secondary-text-color)] font-bold">{t('admin.accounts.title')}</h3>
           <div className="overflow-x-auto">
@@ -111,7 +210,13 @@ export const AdminPage: React.FC<AdminProps> = ({ client, currentUsername, onBac
             ) : users.length === 0 ? (
               <div className="py-2.5">{t('admin.accounts.none')}</div>
             ) : (
-              <UserTable users={users} currentUsername={currentUsername} onDelete={handleDelete} />
+              <UserTable 
+                users={users} 
+                currentUsername={currentUsername} 
+                onDelete={handleDelete} 
+                onChangePassword={setPwdTargetUsername} 
+                onToggleAdmin={handleToggleAdmin}
+              />
             )}
           </div>
         </section>

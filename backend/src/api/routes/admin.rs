@@ -5,7 +5,8 @@ use axum::{
 };
 
 use crate::{
-    AppResult, AppState, CreateUser, User, UserError,
+    AdminChangePasswordRequest, AppResult, AppState, CreateUser, UpdateUserAdminRequest, User,
+    UserError,
     auth::{AdminUser, hash::hash_password},
 };
 
@@ -98,4 +99,72 @@ pub async fn delete_user(
     state.persistence.delete_user(&username).await?;
 
     Ok(StatusCode::NO_CONTENT)
+}
+
+#[utoipa::path(
+    post,
+    path = "/admin/accounts/{username}/password",
+    tag = "admin",
+    security(("bearer_auth" = [])),
+    params(("username" = String, Path, description = "Username")),
+    request_body = AdminChangePasswordRequest,
+    responses(
+        (status = 200, description = "Password changed successfully"),
+        (status = 404, description = "User not found"),
+        (status = 401, description = "Unauthorized"),
+        (status = 403, description = "Forbidden"),
+    )
+)]
+pub async fn admin_change_password(
+    State(state): State<AppState>,
+    _admin: AdminUser,
+    Path(username): Path<String>,
+    Json(payload): Json<AdminChangePasswordRequest>,
+) -> AppResult<StatusCode> {
+    let user = state.persistence.get_user(&username).await?;
+    if user.is_none() {
+        return Err(UserError::UserNotFound.into());
+    }
+
+    let new_hash = hash_password(&payload.new_password)?;
+    state.persistence.set_password_hash(&username, &new_hash).await?;
+
+    Ok(StatusCode::OK)
+}
+
+#[utoipa::path(
+    patch,
+    path = "/admin/accounts/{username}/admin",
+    tag = "admin",
+    security(("bearer_auth" = [])),
+    params(("username" = String, Path, description = "Username")),
+    request_body = UpdateUserAdminRequest,
+    responses(
+        (status = 200, description = "User admin status updated"),
+        (status = 404, description = "User not found"),
+        (status = 400, description = "Cannot demote yourself"),
+        (status = 401, description = "Unauthorized"),
+        (status = 403, description = "Forbidden"),
+    )
+)]
+pub async fn update_user_admin(
+    State(state): State<AppState>,
+    AdminUser(admin_user): AdminUser,
+    Path(username): Path<String>,
+    Json(payload): Json<UpdateUserAdminRequest>,
+) -> AppResult<StatusCode> {
+    if admin_user.username == username && !payload.is_admin {
+        return Err(UserError::CannotDemoteSelf.into());
+    }
+
+    let mut user = state
+        .persistence
+        .get_user(&username)
+        .await?
+        .ok_or(UserError::UserNotFound)?;
+
+    user.is_admin = payload.is_admin;
+    state.persistence.save_user(user).await?;
+
+    Ok(StatusCode::OK)
 }

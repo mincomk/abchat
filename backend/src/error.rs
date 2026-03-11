@@ -1,12 +1,12 @@
 use axum::{
-    Json,
     http::StatusCode,
     response::{IntoResponse, Response},
+    Json,
 };
 use pubsub_rs::PubsubError;
 use thiserror::Error;
 
-use crate::{ErrorResponse, auth::AuthError};
+use crate::{auth::AuthError, ErrorResponse};
 
 #[derive(Debug, Error)]
 pub enum UserError {
@@ -18,6 +18,12 @@ pub enum UserError {
 
     #[error("User already exists")]
     UserAlreadyExists,
+
+    #[error("Cannot demote yourself")]
+    CannotDemoteSelf,
+
+    #[error("Invalid old password")]
+    InvalidOldPassword,
 
     #[error("Message validation failure: {0}")]
     MessageValidationFailed(String),
@@ -73,6 +79,8 @@ impl IntoResponse for AppError {
                 UserError::CannotDeleteYourself => (StatusCode::FORBIDDEN, err(e)),
                 UserError::UserNotFound => (StatusCode::NOT_FOUND, err(e)),
                 UserError::UserAlreadyExists => (StatusCode::CONFLICT, err(e)),
+                UserError::CannotDemoteSelf => (StatusCode::BAD_REQUEST, err(e)),
+                UserError::InvalidOldPassword => (StatusCode::UNAUTHORIZED, err(e)),
                 UserError::MessageValidationFailed(_) => (StatusCode::BAD_REQUEST, err(e)),
             },
         };

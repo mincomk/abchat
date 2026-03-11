@@ -7,9 +7,11 @@ interface UserTableProps {
   users: User[];
   currentUsername: string;
   onDelete: (username: string) => void;
+  onChangePassword: (username: string) => void;
+  onToggleAdmin: (username: string, is_admin: boolean) => void;
 }
 
-export const UserTable: React.FC<UserTableProps> = ({ users, currentUsername, onDelete }) => {
+export const UserTable: React.FC<UserTableProps> = ({ users, currentUsername, onDelete, onChangePassword, onToggleAdmin }) => {
   const { t } = useTranslation();
   return (
     <table className="w-full border-collapse mt-2.5">
@@ -26,13 +28,26 @@ export const UserTable: React.FC<UserTableProps> = ({ users, currentUsername, on
           <tr key={user.username}>
             <td className="p-2 border-b border-[var(--border-color)]">{user.username}</td>
             <td className="p-2 border-b border-[var(--border-color)]">{user.nickname}</td>
-            <td className="p-2 border-b border-[var(--border-color)]">{user.is_admin ? t('common.yes') : t('common.no')}</td>
             <td className="p-2 border-b border-[var(--border-color)]">
-              {user.username !== currentUsername && (
-                <Button variant="danger" className="!text-[10px] !h-auto !py-0.5 !px-1.5" onClick={() => onDelete(user.username)}>
-                  {t('admin.accounts.delete')}
+              <input 
+                type="checkbox" 
+                checked={user.is_admin} 
+                disabled={user.username === currentUsername}
+                onChange={(e) => onToggleAdmin(user.username, e.target.checked)}
+                className="cursor-pointer"
+              />
+            </td>
+            <td className="p-2 border-b border-[var(--border-color)]">
+              <div className="flex gap-1">
+                <Button variant="secondary" className="!text-[10px] !h-auto !py-0.5 !px-1.5" onClick={() => onChangePassword(user.username)}>
+                  {t('admin.accounts.pwd')}
                 </Button>
-              )}
+                {user.username !== currentUsername && (
+                  <Button variant="danger" className="!text-[10px] !h-auto !py-0.5 !px-1.5" onClick={() => onDelete(user.username)}>
+                    {t('admin.accounts.delete')}
+                  </Button>
+                )}
+              </div>
             </td>
           </tr>
         ))}
