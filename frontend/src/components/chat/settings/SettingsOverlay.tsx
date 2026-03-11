@@ -14,11 +14,11 @@ export const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ client, onClos
     const { t } = useTranslation();
 
     return (
-        <div className="bg-[var(--header-bg)] border-b border-[var(--border-color)] p-2.5 flex flex-wrap gap-4 items-start">
+        <div className="bg-[var(--header-bg)] border-b border-[var(--border-color)] p-2.5 flex flex-col sm:flex-row flex-wrap gap-4 items-start">
             <PasswordChangeCard client={client} onSuccess={onClose} />
             <NotificationSettingsCard client={client} />
 
-            <div className="ml-auto">
+            <div className="ml-auto w-full sm:w-auto flex justify-end">
                 <Button variant="ghost" className="!h-4 !px-2 !text-[9px]" onClick={onClose}>
                     {t('change_pwd.close')}
                 </Button>

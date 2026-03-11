@@ -143,7 +143,10 @@ export const ChatPage: React.FC<ChatProps> = ({ client, username, nickname, isDa
     return (
         <div className="w-full h-full grid grid-rows-[25px_auto_1fr_35px] pb-safe">
             <div className="flex justify-between items-center px-2.5 bg-[var(--header-bg)] border-b border-[var(--border-color)] text-[11px]">
-                <span className="text-[var(--accent-color)] font-bold">#{client.channelId}</span>
+                <div className="flex gap-2 items-center">
+                    <span className="text-[var(--accent-color)] font-bold">#{client.channelId}</span>
+                    <span className="text-[var(--secondary-text-color)] opacity-70">@{username}</span>
+                </div>
                 <div className="flex gap-1.5">
                     <Button variant="ghost" className="!h-4 !px-1 !text-[9px]" onClick={() => setShowSettings(!showSettings)}>
                         {t('chat.settings')}
