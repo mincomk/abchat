@@ -4,7 +4,10 @@ use axum::{
     http::StatusCode,
 };
 
-use crate::{AppResult, AppState, RegisterRequest, User, UserError, auth::{AdminUser, hash::hash_password}};
+use crate::{
+    AppResult, AppState, RegisterRequest, User, UserError,
+    auth::{AdminUser, hash::hash_password},
+};
 
 #[utoipa::path(
     post,
@@ -23,7 +26,12 @@ pub async fn register_user(
     _admin: AdminUser,
     Json(payload): Json<RegisterRequest>,
 ) -> AppResult<StatusCode> {
-    if state.persistence.get_user(&payload.username).await?.is_some() {
+    if state
+        .persistence
+        .get_user(&payload.username)
+        .await?
+        .is_some()
+    {
         return Err(UserError::UserAlreadyExists.into());
     }
 
@@ -75,10 +83,10 @@ pub async fn list_users(
 )]
 pub async fn delete_user(
     State(state): State<AppState>,
-    AdminUser(claims): AdminUser,
+    AdminUser(admin_user): AdminUser,
     Path(username): Path<String>,
 ) -> AppResult<StatusCode> {
-    if claims.sub == username {
+    if admin_user.username == username {
         return Err(UserError::CannotDeleteYourself.into());
     }
 

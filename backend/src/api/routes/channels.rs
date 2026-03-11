@@ -4,7 +4,7 @@ use axum::{
 };
 use serde::Deserialize;
 
-use crate::{AppResult, AppState, Message, auth::jwt::Claims};
+use crate::{AppResult, AppState, Message, User};
 
 #[derive(Debug, Deserialize)]
 pub struct ListMessagesQuery {
@@ -29,7 +29,7 @@ pub struct ListMessagesQuery {
 )]
 pub async fn list_messages(
     State(state): State<AppState>,
-    _claims: Claims,
+    _user: User,
     Path(channel_id): Path<String>,
     Query(query): Query<ListMessagesQuery>,
 ) -> AppResult<Json<Vec<Message>>> {

@@ -2,10 +2,10 @@ use axum::{extract::FromRequestParts, http::request::Parts};
 
 use crate::{
     AppError, AppState, User,
-    auth::{AuthError, jwt::{Claims, auth_claims, auth_user}},
+    auth::{AuthError, jwt::auth_user},
 };
 
-pub struct AdminUser(pub Claims);
+pub struct AdminUser(pub User);
 
 fn extract_bearer(parts: &Parts) -> Result<&str, AuthError> {
     let header = parts
@@ -17,17 +17,6 @@ fn extract_bearer(parts: &Parts) -> Result<&str, AuthError> {
     header
         .strip_prefix("Bearer ")
         .ok_or_else(|| AuthError::InvalidToken)
-}
-
-impl FromRequestParts<AppState> for Claims {
-    type Rejection = AppError;
-
-    async fn from_request_parts(
-        parts: &mut Parts,
-        state: &AppState,
-    ) -> Result<Self, Self::Rejection> {
-        auth_claims(&state.jwt_secret, extract_bearer(parts)?).map_err(Into::into)
-    }
 }
 
 impl FromRequestParts<AppState> for User {
@@ -48,10 +37,10 @@ impl FromRequestParts<AppState> for AdminUser {
         parts: &mut Parts,
         state: &AppState,
     ) -> Result<Self, Self::Rejection> {
-        let claims = auth_claims(&state.jwt_secret, extract_bearer(parts)?)?;
+        let user = auth_user(state, extract_bearer(parts)?).await?;
 
-        if claims.is_admin {
-            Ok(AdminUser(claims))
+        if user.is_admin {
+            Ok(AdminUser(user))
         } else {
             Err(AuthError::NoAccess.into())
         }
