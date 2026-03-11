@@ -58,7 +58,7 @@ const App: React.FC = () => {
 
             setScreen('chat');
         } catch (error: any) {
-            setError(`Login failed: ${error.message}`);
+            setError(`${error.message}`);
         }
     }, []);
 

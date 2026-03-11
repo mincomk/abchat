@@ -138,7 +138,7 @@ export const ChatPage: React.FC<ChatProps> = ({ client, username, nickname, isDa
     };
 
     return (
-        <div className="w-full h-full grid grid-rows-[25px_1fr_35px]">
+        <div className="w-full h-full grid grid-rows-[25px_1fr_35px] pb-safe">
             <div className="flex justify-between items-center px-2.5 bg-[var(--header-bg)] border-b border-[var(--border-color)] text-[11px]">
                 <span className="text-[var(--accent-color)] font-bold">#{client.channelId}</span>
                 <div className="flex gap-1.5">

@@ -108,7 +108,7 @@ export class DBridgeClient {
         } catch (error) {
             let message = 'Unknown error';
             if (isAxiosError(error)) {
-                message = error.response?.data || error.message;
+                message = error.response?.data.message || error.message;
             } else if (error instanceof Error) {
                 message = error.message;
             }
