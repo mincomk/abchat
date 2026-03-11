@@ -5,7 +5,7 @@ use axum::{
 };
 
 use crate::{
-    AppResult, AppState, Subscription, SubscriptionRequest, User, UserSettingsRequest,
+    AppResult, AppState, Subscription, SubscriptionRequest, User, UserSettings, UserSettingsRequest,
     UserSettingsResponse, VapidPublicKeyResponse,
 };
 
@@ -79,7 +79,9 @@ pub async fn get_settings_handler(
         .await?;
 
     Ok(Json(UserSettingsResponse {
-        notification_mode: mode,
+        settings: UserSettings {
+            notification_mode: mode,
+        },
     }))
 }
 
@@ -101,7 +103,7 @@ pub async fn update_settings_handler(
 ) -> AppResult<StatusCode> {
     state
         .persistence
-        .set_user_notification_mode(&user.username, payload.notification_mode)
+        .set_user_notification_mode(&user.username, payload.settings.notification_mode)
         .await?;
 
     Ok(StatusCode::OK)

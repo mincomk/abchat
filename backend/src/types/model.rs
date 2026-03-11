@@ -49,7 +49,6 @@ impl From<String> for NotificationMode {
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct UserSettings {
-    pub username: String,
     pub notification_mode: NotificationMode,
 }
 

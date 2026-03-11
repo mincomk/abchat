@@ -46,22 +46,23 @@ export interface MessageUser {
 
 export type NotificationMode = 'All' | 'Critical' | 'Off';
 
-export interface NotificationSettings {
+export interface UserSettings {
     notification_mode: NotificationMode;
 }
+
+export interface UserSettingsRequest {
+    settings: UserSettings;
+}
+
+export interface UserSettingsResponse {
+    settings: UserSettings;
+}
+
 
 export interface SubscriptionRequest {
     endpoint: string;
     p256dh: string;
     auth: string;
-}
-
-export interface UserSettingsRequest {
-    notification_mode: NotificationMode;
-}
-
-export interface UserSettingsResponse {
-    notification_mode: NotificationMode;
 }
 
 export interface VapidPublicKeyResponse {

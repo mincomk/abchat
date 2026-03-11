@@ -87,13 +87,15 @@ export function fromBackendMode(mode: BackendNotificationMode): NotificationMode
 
 export async function saveNotificationSettings(client: DBridgeClient, settings: NotificationSettings): Promise<void> {
     await client.updateNotificationSettings({
-        notification_mode: toBackendMode(settings.mode)
+        settings: {
+            notification_mode: toBackendMode(settings.mode)
+        }
     });
 }
 
 export async function getNotificationSettings(client: DBridgeClient): Promise<NotificationSettings> {
     const response = await client.getNotificationSettings();
     return {
-        mode: fromBackendMode(response.notification_mode)
+        mode: fromBackendMode(response.settings.notification_mode)
     };
 }
