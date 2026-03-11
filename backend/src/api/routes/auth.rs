@@ -1,7 +1,10 @@
+use crate::{
+    AppResult, AppState, LoginRequest, LoginResponse,
+    auth::{AuthError, hash::verify_password, jwt::sign_token},
+};
 use axum::{Json, extract::State};
-use crate::{AppResult, AppState, LoginRequest, LoginResponse, auth::{AuthError, jwt::sign_token, hash::verify_password}};
 
-const DUMMY_HASH: &str = "$argon2id$v=19$m=19456,t=2,p=1$ojqFtNSA2NuI/+ZSF82Dyw$TXAS5A39/5nSEXJyQ4R9DQVJiuNWRcsxZDugl2Uy4fM";
+const DUMMY_HASH: &str = "$argon2id$v=19$m=19456,t=2,p=1$zNT0+g5Sr8sF+9G9DSo0AA$RNSbxYsPd5qttRzezg1HFK4WPLxdf9cH9JlLvENbfXE";
 
 #[utoipa::path(
     post,
@@ -17,10 +20,7 @@ pub async fn login_handler(
     State(state): State<AppState>,
     Json(payload): Json<LoginRequest>,
 ) -> AppResult<Json<LoginResponse>> {
-    let user = state
-        .persistence
-        .get_user(&payload.username)
-        .await?;
+    let user = state.persistence.get_user(&payload.username).await?;
 
     let hash = match &user {
         Some(u) => &u.password_hash,

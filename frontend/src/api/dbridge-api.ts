@@ -158,8 +158,7 @@ export class DBridgeClient {
             baseUrl = `${window.location.protocol}//${window.location.host}`;
         }
 
-        const url = new URL('/messages', baseUrl);
-        url.searchParams.set('channel_id', this.#channelId);
+        const url = new URL(`/channels/${this.#channelId}/messages`, baseUrl);
         url.searchParams.set('limit', limit.toString());
         url.searchParams.set('offset', offset.toString());
 

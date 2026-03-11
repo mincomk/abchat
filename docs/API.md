@@ -79,10 +79,11 @@ Deletes a user account. Cannot delete yourself.
 
 ### Get Messages
 Retrieves historical messages for the web platform.
-- **URL**: `GET /messages`
+- **URL**: `GET /channels/{channel_id}/messages`
 - **Authentication**: Required (Bearer Token)
+- **Path Parameters**:
+    - `channel_id` (string): Filter messages by a specific remote channel ID.
 - **Query Parameters**:
-    - `channel_id` (string, optional): Filter messages by a specific remote channel ID. If omitted, messages from all channels are returned.
     - `limit` (integer, optional): Maximum number of messages to return. Default: `50`, Maximum: `100`.
     - `offset` (integer, optional): Number of messages to skip for pagination. Default: `0`.
 
