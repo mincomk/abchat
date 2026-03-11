@@ -7,28 +7,47 @@ DBridge is a message bridging engine designed to connect multiple communication 
 
 ## Project Structure
 - `backend/`: The core bridging engine written in Rust.
-    - `core/`: Shared types and logic (channels, providers, members, etc.).
-    - `engine/`: The main orchestrator of platform integrations and message flows.
-    - `auth/`: CLI tool to generate JWT tokens for the web backend.
-    - `persistence/`: Data persistence layer (`InMemoryPersistence`, `PostgresPersistence`).
-    - `pubsub/`: Message pubsub layer (`InMemoryPubSub` (using `pubsub-rs`), `RedisMessagePubSub`).
-    - `provider/`: Integration with external platforms (Discord, Web).
+    - `src/types/`: API DTOs (`dto.rs`) and internal models (`model.rs`).
+    - `src/api/routes/`: Route handlers (e.g., `admin.rs`, `auth.rs`).
+    - `src/api/router.rs`: Route registration using `utoipa`.
+    - `src/service/persistence/`: Data persistence layer.
+        - `postgres.rs`: SQL implementation using `sqlx`.
+        - `in_memory.rs`: DashMap implementation for testing/dev.
+    - `src/error.rs`: Centralized error handling (`AppError`, `UserError`).
 - `bot/`: Discord bot integration written in TypeScript.
-- `frontend/`: TypeScript/React-based web UI for DBridge.
-- `signer/`: A separate Rust tool for JWT signing.
-- `docs/`: Project documentation.
+- `frontend/`: TypeScript/React-based web UI.
+    - `src/api/dbridge-api.ts`: Central API client (`DBridgeClient`).
+    - `src/pages/`: Main screen components.
+    - `src/components/`: Reusable UI elements (ui/, chat/, admin/).
+    - `src/i18n/locales/`: Translation files (`en.json`, `ko.json`).
+    - `src/App.tsx`: Main entry point with React Router v7 navigation.
 - `docker-compose.yml`: Main orchestration for development and deployment.
 
 ## Key Technologies
-- **Backend**: Rust, `tokio` (async runtime), `serenity` (Discord), `axum` (Web), `serde` (serialization), `tracing` (logging), `jsonwebtoken` (JWT), `redis` (PubSub), `sqlx` (PostgreSQL), `valkey` (Infrastructure).
-- **Frontend**: TypeScript, Vite, React (implied).
+- **Backend**: Rust, `axum` (Web), `tokio` (Async), `sqlx` (PostgreSQL), `utoipa` (OpenAPI), `argon2` (Hashing).
+- **Frontend**: TypeScript, React, **React Router v7**, Vite, Tailwind CSS.
 
-## Development Conventions
-- **Language**: Rust for backend/tools, TypeScript for frontend.
-- **Error Handling**: Use `Result` and `anyhow` (or similar) where appropriate. Main backend entry point uses `Box<dyn std::error::Error>`.
-- **Async**: Use `tokio` for all async operations.
-- **Logging**: Use `tracing` for instrumentation and logging.
-- **Configuration**: Managed through `config.toml` and environment variables (using `dotenvy`).
+## Persistence Layer
+The backend uses a `Persistence` trait (`src/service/persistence.rs`) to abstract data operations. 
+- **User Management**: The `save_user` method handles both insertion and updates (via `ON CONFLICT` in Postgres). 
+- **Modifying Schema**: Update `init_db` in `postgres.rs` and the `User` struct/trait methods accordingly.
+
+## Feature Development Workflow
+
+### 1. Backend API & Logic
+1.  **DTO**: Define or update request/response structures in `src/types/dto.rs`.
+2.  **Error Handling**: If needed, add new error variants to `UserError` in `src/error.rs`.
+3.  **Persistence**: Update the `Persistence` trait and its implementations if data storage requirements change.
+4.  **Handlers**: Implement the logic in a new or existing module within `src/api/routes/`.
+5.  **Routing**: Register the handler in `src/api/router.rs` using `utoipa::path`.
+6.  **Verify**: Run `cargo check` in the `backend` directory.
+
+### 2. Frontend Integration & UI
+1.  **API Client**: Add new methods to `DBridgeClient` in `src/api/dbridge-api.ts` to match the backend endpoints.
+2.  **Translations**: Add any new UI labels to `src/i18n/locales/en.json` and `ko.json`.
+3.  **Components**: Extract complex UI logic into separate components within `src/components/`.
+4.  **Routing**: Update `src/App.tsx` using React Router v7 (`Routes`, `Route`, `useNavigate`) for navigation and access control.
+5.  **Verify**: Run `pnpm build` (or `npm run build`) in the `frontend` directory.
 
 ## How to Update this file
 Agents should update `AGENTS.md` whenever they:
@@ -36,7 +55,6 @@ Agents should update `AGENTS.md` whenever they:
 2.  Add new technologies or major dependencies.
 3.  Establish new coding conventions or best practices.
 4.  Find crucial information that would help future agents understand the codebase faster.
-5.  Add or update environment variables. In this case, also update `docs/DEPLOYMENT.md`.
 
 To update:
 1.  Read the current `AGENTS.md`.

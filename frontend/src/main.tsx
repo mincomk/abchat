@@ -4,11 +4,14 @@ import { BrowserRouter } from 'react-router'
 import './index.css'
 import './i18n/config'
 import App from './App.tsx'
+import { registerSW } from 'virtual:pwa-register';
+
+registerSW({ immediate: true });
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </StrictMode>,
+    <StrictMode>
+        <BrowserRouter>
+            <App />
+        </BrowserRouter>
+    </StrictMode>,
 )
