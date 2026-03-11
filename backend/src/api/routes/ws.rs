@@ -17,7 +17,7 @@ use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{
-    AppResult, AppState, Message, SessionState, WsError, WsPacketC2S, WsPacketS2C,
+    AppResult, AppState, Message, SessionState, UserError, WsError, WsPacketC2S, WsPacketS2C,
     auth::{AuthError, jwt},
     util,
 };
@@ -40,7 +40,7 @@ async fn handle_socket(socket: WebSocket, state: AppState, channel_id: String) {
     let (sender, receiver) = socket.split();
     let sender = Arc::new(Mutex::new(sender));
 
-    tokio::spawn({
+    let r = tokio::spawn({
         let sender_c = sender.clone();
         let state_c = state.clone();
         let channel_id_c = channel_id.clone();
@@ -49,26 +49,31 @@ async fn handle_socket(socket: WebSocket, state: AppState, channel_id: String) {
         }
     });
 
-    tokio::spawn({
+    let s = tokio::spawn({
         let sender_c = sender.clone();
         async move {
             run_sender_loop(sender_c, state, channel_id).await;
         }
     });
+
+    let _ = tokio::join!(s, r);
 }
 
 #[instrument(level = "info", name = "Handling {session_state}", skip_all)]
 async fn run_sender_loop(sender: ArcSender, state: AppState, channel_id: String) {
-    let subscriber = state.pubsub.subscribe(&channel_id).await;
-
-    loop {
-        if let Ok(msg) = subscriber.next().await {
-            if let Err(_) = send(sender.clone(), WsPacketS2C::Message(msg)).await {
+    match state.pubsub.subscribe(&channel_id).await {
+        Ok(subscriber) => loop {
+            if let Ok(msg) = subscriber.next().await {
+                if let Err(_) = send(sender.clone(), WsPacketS2C::Message(msg)).await {
+                    break;
+                }
+            } else {
+                tracing::warn!("Subscriber closed.");
                 break;
             }
-        } else {
-            tracing::warn!("Subscriber closed.");
-            break;
+        },
+        Err(e) => {
+            tracing::warn!("Failed to subscribe: {:?}", e);
         }
     }
 }
@@ -118,9 +123,9 @@ async fn handle_message(
     data: WsPacketC2S,
     channel_id: &str,
 ) -> AppResult<()> {
+    let session_state = ss_arc.lock().await.clone();
     match data {
         WsPacketC2S::Identify(identify) => {
-            let session_state = ss_arc.lock().await.clone();
             if session_state.username.is_none() {
                 let user = jwt::auth_user(&state, &identify.token).await?;
                 ss_arc.lock().await.username.replace(user.username);
@@ -129,6 +134,12 @@ async fn handle_message(
             }
         }
         WsPacketC2S::SendMessage(message) => {
+            if session_state.username.is_none() {
+                return Err(AuthError::Unauthorized.into());
+            }
+
+            validate_message(&message.content)?;
+
             let message = Message {
                 id: Uuid::new_v4().to_string(),
                 channel_id: channel_id.to_string(),
@@ -143,6 +154,17 @@ async fn handle_message(
     }
 
     Ok(())
+}
+
+fn validate_message(content: &str) -> Result<(), UserError> {
+    // Discord max message len
+    if content.len() < 2000 {
+        Ok(())
+    } else {
+        Err(UserError::MessageValidationFailed(
+            "Message is too long. (max 2000)".to_string(),
+        ))
+    }
 }
 
 async fn send(sender: ArcSender, value: WsPacketS2C) -> Result<(), String> {

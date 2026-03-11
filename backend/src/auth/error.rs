@@ -16,4 +16,7 @@ pub enum AuthError {
 
     #[error("Already authenticated")]
     AlreadyAuthenticated,
+
+    #[error("Unauthorized")]
+    Unauthorized,
 }

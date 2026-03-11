@@ -1,11 +1,11 @@
 use axum::{
+    Json,
     http::StatusCode,
     response::{IntoResponse, Response},
-    Json,
 };
 use thiserror::Error;
 
-use crate::{auth::AuthError, ErrorResposne};
+use crate::{ErrorResposne, auth::AuthError};
 
 #[derive(Debug, Error)]
 pub enum UserError {
@@ -14,6 +14,9 @@ pub enum UserError {
 
     #[error("User not found")]
     UserNotFound,
+
+    #[error("Message validation failure: {0}")]
+    MessageValidationFailed(String),
 }
 
 #[derive(Debug, Error)]
@@ -26,6 +29,9 @@ pub enum ServiceError {
 
     #[error("Database error: {0}")]
     Database(#[from] sqlx::Error),
+
+    #[error("Internal error: {0}")]
+    Internal(String),
 }
 
 #[derive(Debug, Error)]
@@ -53,6 +59,7 @@ impl IntoResponse for AppError {
             AppError::UserError(e) => match e {
                 UserError::CannotDeleteYourself => (StatusCode::FORBIDDEN, err(e)),
                 UserError::UserNotFound => (StatusCode::NOT_FOUND, err(e)),
+                UserError::MessageValidationFailed(_) => (StatusCode::BAD_REQUEST, err(e)),
             },
         };
 

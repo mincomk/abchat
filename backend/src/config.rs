@@ -1,6 +1,18 @@
-#[derive(Debug, Clone)]
+use serde::Deserialize;
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct AppConfig {
     pub jwt_secret: String,
-    pub database_url: String,
+    pub postgres_url: String,
     pub redis_url: String,
+    pub http_listen: String,
+}
+
+impl AppConfig {
+    pub fn from_env() -> Result<Self, Box<dyn std::error::Error>> {
+        dotenvy::dotenv()?;
+        let config: AppConfig = envy::from_env()?;
+
+        Ok(config)
+    }
 }

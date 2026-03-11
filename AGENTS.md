@@ -10,7 +10,8 @@ DBridge is a message bridging engine designed to connect multiple communication 
     - `core/`: Shared types and logic (channels, providers, members, etc.).
     - `engine/`: The main orchestrator of platform integrations and message flows.
     - `auth/`: CLI tool to generate JWT tokens for the web backend.
-    - `persistence/`: Data persistence layer (currently `InMemoryPersistence`, `PostgresPersistence`).
+    - `persistence/`: Data persistence layer (`InMemoryPersistence`, `PostgresPersistence`).
+    - `pubsub/`: Message pubsub layer (`InMemoryPubSub` (using `pubsub-rs`), `RedisMessagePubSub`).
     - `provider/`: Integration with external platforms (Discord, Web).
 - `frontend/`: TypeScript/React-based web UI for DBridge.
 - `signer/`: A separate Rust tool for JWT signing.
@@ -19,7 +20,6 @@ DBridge is a message bridging engine designed to connect multiple communication 
 ## Key Technologies
 - **Backend**: Rust, `tokio` (async runtime), `serenity` (Discord), `axum` (Web), `serde` (serialization), `tracing` (logging), `jsonwebtoken` (JWT), `redis` (PubSub), `sqlx` (PostgreSQL).
 - **Frontend**: TypeScript, Vite, React (implied).
-- **Caching**: `Valkey` (optional), `Redis`, `InMemory`.
 
 ## Development Conventions
 - **Language**: Rust for backend/tools, TypeScript for frontend.

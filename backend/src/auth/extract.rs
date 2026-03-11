@@ -16,7 +16,7 @@ fn extract_bearer(parts: &Parts) -> Result<&str, AuthError> {
 
     header
         .strip_prefix("Bearer ")
-        .ok_or_else(|| AuthError::AccountNotExist)
+        .ok_or_else(|| AuthError::InvalidToken)
 }
 
 impl FromRequestParts<AppState> for User {

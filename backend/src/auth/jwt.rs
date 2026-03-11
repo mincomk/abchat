@@ -20,7 +20,7 @@ pub fn verify_token(secret: &[u8], token: &str) -> AppResult<Claims> {
 }
 
 pub async fn auth_user(state: &AppState, token: &str) -> AppResult<User> {
-    let claims = verify_token(&state.config.jwt_secret.as_bytes(), token)?;
+    let claims = verify_token(&state.jwt_secret, token)?;
 
     let user = state
         .persistence

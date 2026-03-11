@@ -3,6 +3,9 @@ use async_trait::async_trait;
 use crate::{AppResult, Message, User};
 
 pub mod postgres;
+pub mod in_memory;
+
+pub use in_memory::InMemoryPersistence;
 
 #[async_trait]
 pub trait Persistence: Send + Sync {
