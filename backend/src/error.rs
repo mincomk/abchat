@@ -1,11 +1,12 @@
 use axum::{
+    Json,
     http::StatusCode,
     response::{IntoResponse, Response},
-    Json,
 };
+use pubsub_rs::PubsubError;
 use thiserror::Error;
 
-use crate::{auth::AuthError, ErrorResponse};
+use crate::{ErrorResponse, auth::AuthError};
 
 #[derive(Debug, Error)]
 pub enum UserError {
@@ -32,6 +33,9 @@ pub enum ServiceError {
 
     #[error("Database error: {0}")]
     Database(#[from] sqlx::Error),
+
+    #[error("PubSub error: {0}")]
+    Pubsub(#[from] PubsubError),
 
     #[error("Internal error: {0}")]
     Internal(String),

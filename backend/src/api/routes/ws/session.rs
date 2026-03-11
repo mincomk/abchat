@@ -5,33 +5,36 @@ use futures_util::{
 };
 use std::time::Duration;
 use tokio::time::interval;
-use tracing::{info, instrument, warn};
+use tracing::{instrument, warn};
 
 use super::handler;
-use crate::{
-    AppResult, AppState, SessionState, WsError, WsPacketC2S, WsPacketS2C,
-    service::pubsub::MessageSubscriber,
-};
+use crate::{AppResult, AppState, User, WsError, WsPacketC2S, WsPacketS2C, chat::ChatSession};
 
 pub struct WsActor {
     state: AppState,
     channel_id: String,
-    session_state: SessionState,
+    chat: ChatSession,
+    user: User,
     sink: SplitSink<WebSocket, ws::Message>,
     stream: SplitStream<WebSocket>,
-    subscriber: Option<Box<dyn MessageSubscriber>>,
 }
 
 impl WsActor {
-    pub fn new(state: AppState, channel_id: String, socket: WebSocket) -> Self {
+    pub fn new(
+        state: AppState,
+        chat: ChatSession,
+        user: User,
+        channel_id: String,
+        socket: WebSocket,
+    ) -> Self {
         let (sink, stream) = socket.split();
         Self {
             state,
             channel_id,
-            session_state: SessionState::default(),
+            chat,
+            user,
             sink,
             stream,
-            subscriber: None,
         }
     }
 
@@ -49,11 +52,7 @@ impl WsActor {
                 }
 
                 res = async {
-                    if let Some(sub) = self.subscriber.as_ref() {
-                        sub.next().await
-                    } else {
-                        std::future::pending().await
-                    }
+                    self.chat.recv().await
                 } => {
                     match res {
                         Ok(msg) => {
@@ -102,37 +101,24 @@ impl WsActor {
             }
         };
 
-        match handler::handle_packet(
+        if let Err(e) = handler::handle_packet(
             &self.state,
-            &mut self.session_state,
+            &self.user,
+            &self.chat,
             packet,
             &self.channel_id,
         )
         .await
         {
-            Ok(auth_success) => {
-                if auth_success {
-                    match self.state.pubsub.subscribe(&self.channel_id).await {
-                        Ok(sub) => {
-                            self.subscriber = Some(sub);
-                        }
-                        Err(e) => {
-                            warn!("Failed to subscribe: {:?}", e);
-                            self.send_error("Internal subscription error").await?;
-                        }
-                    }
-                }
-                Ok(())
-            }
-            Err(e) => {
-                let msg = if let crate::AppError::Service(_) = e {
-                    "Internal server error"
-                } else {
-                    &e.to_string()
-                };
-                self.send_error(msg).await
-            }
+            let msg = if let crate::AppError::Service(_) = e {
+                "Internal server error"
+            } else {
+                &e.to_string()
+            };
+            let _ = self.send_error(msg).await;
         }
+
+        Ok(())
     }
 
     async fn send_packet(&mut self, packet: WsPacketS2C) -> AppResult<()> {

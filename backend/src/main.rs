@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
 use backend::{
-    AppConfig, AppState, api::router::create_router, onboard::init_admin_account,
-    persistence::postgres::PostgresPersistence, pubsub::redis::RedisMessagePubSub,
+    AppConfig, AppState, api::router::create_router, chat::ChatManager,
+    onboard::init_admin_account, persistence::postgres::PostgresPersistence,
+    pubsub::redis::RedisMessagePubSub,
 };
 use git_version::git_version;
 use tokio::net::TcpListener;
@@ -32,7 +33,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let state = AppState {
         persistence: Arc::new(pg),
-        pubsub: Arc::new(redis),
+        chat_manager: ChatManager::new(),
         jwt_secret: config.jwt_secret.as_bytes().to_vec(),
     };
 
