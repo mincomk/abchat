@@ -5,12 +5,9 @@ use backend::{
     onboard::init_admin_account, persistence::postgres::PostgresPersistence,
     pubsub::redis::RedisMessagePubSub,
 };
-use git_version::git_version;
 use tokio::net::TcpListener;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
-
-const GIT_VERSION: &str = git_version!();
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -20,7 +17,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tracing_subscriber::fmt().with_env_filter(env_filter).init();
 
-    tracing::info!("Hello. ABChat {}", GIT_VERSION);
+    tracing::info!("Hello. ABChat");
 
     let config = AppConfig::from_env()?;
 

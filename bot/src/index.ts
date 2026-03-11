@@ -10,6 +10,15 @@ const ABCHAT_CHANNEL_ID = process.env['ABCHAT_CHANNEL_ID'] || 'bot:messages';
 
 const mainTopic = 'chat:' + ABCHAT_CHANNEL_ID
 
+process.on('SIGTERM', () => {
+    logger.info('Terminating.')
+    process.exit(0)
+})
+process.on('SIGINT', () => {
+    logger.info('Terminating.')
+    process.exit(0)
+})
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,

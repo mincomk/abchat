@@ -13,7 +13,7 @@ pub struct AppConfig {
 
 impl AppConfig {
     pub fn from_env() -> Result<Self, Box<dyn std::error::Error>> {
-        dotenvy::dotenv()?;
+        let _ = dotenvy::dotenv();
         let config: AppConfig = envy::from_env()?;
 
         Ok(config)
