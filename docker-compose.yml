@@ -43,6 +43,8 @@ services:
       HTTP_LISTEN: "0.0.0.0:8080"
       REDIS_URL: "redis://valkey:6379"
       POSTGRES_URL: "postgres://${POSTGRES_USER:-abchat}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-abchat}"
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
 
   bot:
     image: ghcr.io/mincomk/abchat/bot:main

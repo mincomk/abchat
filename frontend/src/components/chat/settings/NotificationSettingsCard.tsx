@@ -3,12 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '../../ui/Button';
 import { SettingsCard } from './SettingsCard';
 import { DBridgeClient } from '../../../api/dbridge-api';
-import { 
-    requestNotificationPermission, 
-    saveNotificationSettings, 
+import {
+    requestNotificationPermission,
+    saveNotificationSettings,
     getNotificationSettings,
     checkNotificationPermission,
-    type NotificationMode 
+    type NotificationMode
 } from '../../../api/notifications';
 
 interface NotificationSettingsCardProps {
@@ -27,7 +27,7 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
             try {
                 const status = await checkNotificationPermission();
                 setPermission(status);
-                
+
                 const settings = await getNotificationSettings(client);
                 setMode(settings.mode);
             } catch (err) {
@@ -67,9 +67,9 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
     return (
         <SettingsCard title={t('notifications.title')}>
             <div className="flex flex-col gap-2">
-                <Button 
-                    variant={permission === 'granted' ? 'ghost' : 'secondary'} 
-                    className="!h-6 !text-[9px]" 
+                <Button
+                    variant={permission === 'granted' ? 'ghost' : 'secondary'}
+                    className="!h-6 !text-[9px]"
                     onClick={handleAllow}
                     disabled={permission === 'granted'}
                 >
@@ -85,9 +85,8 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
                             <Button
                                 key={m}
                                 variant={mode === m ? 'primary' : 'ghost'}
-                                className={`!h-5 !px-1.5 !text-[8px] ${
-                                    m === 'off' && mode !== 'off' ? 'opacity-70 hover:opacity-100' : ''
-                                } ${m === 'off' && mode === 'off' ? '!bg-red-900 !text-white' : ''}`}
+                                className={`!h-5 !px-1.5 !text-[8px] ${m === 'off' && mode !== 'off' ? 'opacity-70 hover:opacity-100' : ''
+                                    } ${m === 'off' && mode === 'off' ? '!bg-red-900 !text-white' : ''}`}
                                 onClick={() => handleModeChange(m)}
                             >
                                 {t(`notifications.mode_${m}`)}

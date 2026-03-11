@@ -64,11 +64,15 @@ The project uses a single `.env` file at the root to manage configuration across
 | `JWT_SECRET` | Secret key for signing and verifying JSON Web Tokens. | `my_super_secret_key` |
 | `ADMIN_USERNAME` | (Optional) Username for the administrative user. | `admin` |
 | `ADMIN_PASSWORD_HASH` | (Optional) Argon2 hash of the administrative user's password. Use **single quotes** for the value to avoid issues with shell expansion of '$'. | `'$argon2id$v=19$m=...'` |
+| `VAPID_PUBLIC_KEY` | Public key for Web Push notifications. | `B...` |
+| `VAPID_PRIVATE_KEY` | Private key for Web Push notifications. | `...` |
 
 You can generate the Argon2 hash for your admin password by running the following command in the `backend/` directory:
 ```bash
 cargo run --bin hash
 ```
+
+To generate VAPID keys, you can use various CLI tools or online generators. Ensure they are in the correct Base64URL format.
 
 ### Frontend (`frontend/`)
 

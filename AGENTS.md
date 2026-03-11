@@ -53,6 +53,13 @@ The backend uses a `Persistence` trait (`src/service/persistence.rs`) to abstrac
 4.  **Routing**: Update `src/App.tsx` using React Router v7 (`Routes`, `Route`, `useNavigate`) for navigation and access control.
 5.  **Verify**: Run `pnpm build` (or `npm run build`) in the `frontend` directory.
 
+### 3. Adding Backend Configuration
+1.  **Config**: Add the new field to `AppConfig` in `backend/src/config.rs`.
+2.  **State**: Add the new field to `AppState` in `backend/src/state.rs`.
+3.  **Main**: Update `backend/src/main.rs` to load the field from `AppConfig` and pass it to `AppState`.
+4.  **Environment**: Add the new variable to `.env` and `.env.example`.
+5.  **Deployment**: Update `docker-compose.yml` to pass the environment variable if needed.
+
 ## How to Update this file
 Agents should update `AGENTS.md` whenever they:
 1.  Discover new architectural patterns or significant components.

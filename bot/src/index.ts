@@ -54,7 +54,12 @@ subClient.on('message', async (topic, message) => {
             const discordChannel = client.channels.cache.get(DISCORD_CHANNEL_ID!);
 
             if (discordChannel instanceof TextChannel) {
-                await discordChannel.send(`**${data.sender.nickname}**: ${data.content}`);
+                await discordChannel.send({
+                    content: `**${data.sender.nickname}**: ${data.content}`,
+                    allowedMentions: {
+                        parse: ['users']
+                    }
+                });
             }
         }
     } catch (err) {

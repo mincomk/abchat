@@ -34,6 +34,76 @@ Authenticates a user and returns a JWT.
 }
 ```
 
+### Change Password
+Changes the password of the authenticated user.
+- **URL**: `POST /auth/change-password`
+- **Authentication**: Required (Bearer Token)
+- **Body**:
+```json
+{
+  "old_password": "current_password",
+  "new_password": "new_password"
+}
+```
+
+## Push Notifications
+
+### Get VAPID Public Key
+Retrieves the VAPID public key needed for the browser's `PushManager` subscription.
+- **URL**: `GET /notifications/vapid-key`
+- **Authentication**: None
+- **Response**:
+```json
+{
+  "public_key": "B..."
+}
+```
+
+### Subscribe
+Saves a new push notification subscription for the authenticated user.
+- **URL**: `POST /notifications/subscribe`
+- **Authentication**: Required (Bearer Token)
+- **Body**:
+```json
+{
+  "endpoint": "https://fcm.googleapis.com/fcm/send/...",
+  "p256dh": "...",
+  "auth": "..."
+}
+```
+
+### Unsubscribe
+Removes all push subscriptions for the authenticated user.
+- **URL**: `POST /notifications/unsubscribe`
+- **Authentication**: Required (Bearer Token)
+- **Response**: `200 OK`
+
+### Get Settings
+Retrieves the current notification settings.
+- **URL**: `GET /notifications/settings`
+- **Authentication**: Required (Bearer Token)
+- **Response Example**:
+```json
+{
+  "settings": {
+    "notification_mode": "All"
+  }
+}
+```
+
+### Update Settings
+Updates the notification preferences.
+- **URL**: `PUT /notifications/settings`
+- **Authentication**: Required (Bearer Token)
+- **Body**:
+```json
+{
+  "settings": {
+    "notification_mode": "Critical"
+  }
+}
+```
+
 ## Admin Endpoints
 
 All admin endpoints require an Admin Bearer Token.
@@ -69,6 +139,28 @@ Retrieves all registered user accounts.
     "is_admin": false
   }
 ]
+```
+
+### Update Admin Status
+Promotes or demotes a user account.
+- **URL**: `PATCH /admin/accounts/:username/admin`
+- **Authentication**: Required (Admin Bearer Token)
+- **Body**:
+```json
+{
+  "is_admin": true
+}
+```
+
+### Change User Password
+Changes the password of a user account.
+- **URL**: `POST /admin/accounts/:username/password`
+- **Authentication**: Required (Admin Bearer Token)
+- **Body**:
+```json
+{
+  "new_password": "new_secure_password"
+}
 ```
 
 ### Delete Account
