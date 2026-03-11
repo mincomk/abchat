@@ -6,6 +6,9 @@ pub struct AppConfig {
     pub postgres_url: String,
     pub redis_url: String,
     pub http_listen: String,
+
+    pub admin_username: Option<String>,
+    pub admin_password_hash: Option<String>,
 }
 
 impl AppConfig {

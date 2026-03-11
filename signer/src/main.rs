@@ -1,11 +1,12 @@
 use clap::Parser;
-use jsonwebtoken::{Algorithm, EncodingKey, Header, encode};
+use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Claims {
     pub sub: String, // username
+    pub iat: usize,
     pub exp: usize,
     pub is_admin: bool,
 }
@@ -37,10 +38,12 @@ fn main() {
         .duration_since(UNIX_EPOCH)
         .expect("Time went backwards");
 
-    let expiration = since_the_epoch.as_secs() + (args.expires * 3600);
+    let now = since_the_epoch.as_secs();
+    let expiration = now + (args.expires * 3600);
 
     let claims = Claims {
         sub: args.username,
+        iat: now as usize,
         exp: expiration as usize,
         is_admin: args.admin,
     };

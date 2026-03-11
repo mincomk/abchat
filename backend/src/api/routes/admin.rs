@@ -4,7 +4,38 @@ use axum::{
     http::StatusCode,
 };
 
-use crate::{AppResult, AppState, User, UserError, auth::AdminUser};
+use crate::{AppResult, AppState, RegisterRequest, User, UserError, auth::{AdminUser, hash::hash_password}};
+
+#[utoipa::path(
+    post,
+    path = "/admin/register",
+    tag = "admin",
+    security(("bearer_auth" = [])),
+    request_body = RegisterRequest,
+    responses(
+        (status = 201, description = "User registered"),
+        (status = 401, description = "Unauthorized"),
+        (status = 403, description = "Forbidden"),
+    )
+)]
+pub async fn register_user(
+    State(state): State<AppState>,
+    _admin: AdminUser,
+    Json(payload): Json<RegisterRequest>,
+) -> AppResult<StatusCode> {
+    let password_hash = hash_password(&payload.password)?;
+
+    let user = User {
+        username: payload.username,
+        nickname: payload.nickname,
+        is_admin: false,
+        password_hash,
+    };
+
+    state.persistence.save_user(user).await?;
+
+    Ok(StatusCode::CREATED)
+}
 
 #[utoipa::path(
     get,

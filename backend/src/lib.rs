@@ -16,4 +16,6 @@ pub use service::*;
 pub mod state;
 pub use state::*;
 
+pub mod onboard;
+
 pub mod util;

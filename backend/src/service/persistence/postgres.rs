@@ -26,7 +26,8 @@ impl PostgresPersistence {
             "CREATE TABLE IF NOT EXISTS users (
                 username TEXT PRIMARY KEY,
                 nickname TEXT NOT NULL,
-                is_admin BOOLEAN NOT NULL
+                is_admin BOOLEAN NOT NULL,
+                password_hash TEXT NOT NULL
             )",
         )
         .execute(&self.pool)
@@ -53,15 +54,17 @@ impl PostgresPersistence {
 impl Persistence for PostgresPersistence {
     async fn save_user(&self, u: User) -> AppResult<()> {
         sqlx::query(
-            "INSERT INTO users (username, nickname, is_admin)
-            VALUES ($1, $2, $3)
+            "INSERT INTO users (username, nickname, is_admin, password_hash)
+            VALUES ($1, $2, $3, $4)
             ON CONFLICT (username) DO UPDATE SET
             nickname = EXCLUDED.nickname,
-            is_admin = EXCLUDED.is_admin",
+            is_admin = EXCLUDED.is_admin,
+            password_hash = EXCLUDED.password_hash",
         )
         .bind(&u.username)
         .bind(&u.nickname)
         .bind(u.is_admin)
+        .bind(&u.password_hash)
         .execute(&self.pool)
         .await
         .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
@@ -70,7 +73,7 @@ impl Persistence for PostgresPersistence {
     }
 
     async fn list_users(&self) -> AppResult<Vec<User>> {
-        let rows = sqlx::query("SELECT username, nickname, is_admin FROM users")
+        let rows = sqlx::query("SELECT username, nickname, is_admin, password_hash FROM users")
             .fetch_all(&self.pool)
             .await
             .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
@@ -81,6 +84,7 @@ impl Persistence for PostgresPersistence {
                 username: r.get("username"),
                 nickname: r.get("nickname"),
                 is_admin: r.get("is_admin"),
+                password_hash: r.get("password_hash"),
             })
             .collect();
 
@@ -88,7 +92,7 @@ impl Persistence for PostgresPersistence {
     }
 
     async fn get_user(&self, username: &str) -> AppResult<Option<User>> {
-        let row = sqlx::query("SELECT username, nickname, is_admin FROM users WHERE username = $1")
+        let row = sqlx::query("SELECT username, nickname, is_admin, password_hash FROM users WHERE username = $1")
             .bind(username)
             .fetch_optional(&self.pool)
             .await
@@ -98,6 +102,7 @@ impl Persistence for PostgresPersistence {
             username: r.get("username"),
             nickname: r.get("nickname"),
             is_admin: r.get("is_admin"),
+            password_hash: r.get("password_hash"),
         });
 
         Ok(user)

@@ -6,6 +6,8 @@ pub struct User {
     pub username: String,
     pub nickname: String,
     pub is_admin: bool,
+    #[serde(skip_serializing)]
+    pub password_hash: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]

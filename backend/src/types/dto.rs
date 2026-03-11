@@ -16,6 +16,13 @@ pub struct LoginResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub struct ErrorResposne {
+pub struct RegisterRequest {
+    pub username: String,
+    pub password: String,
+    pub nickname: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct ErrorResponse {
     pub message: String,
 }

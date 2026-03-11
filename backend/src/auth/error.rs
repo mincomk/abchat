@@ -19,4 +19,7 @@ pub enum AuthError {
 
     #[error("Unauthorized")]
     Unauthorized,
+
+    #[error("Invalid credentials")]
+    InvalidCredentials,
 }

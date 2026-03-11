@@ -5,7 +5,7 @@ use axum::{
 };
 use thiserror::Error;
 
-use crate::{ErrorResposne, auth::AuthError};
+use crate::{ErrorResponse, auth::AuthError};
 
 #[derive(Debug, Error)]
 pub enum UserError {
@@ -67,8 +67,8 @@ impl IntoResponse for AppError {
     }
 }
 
-fn err(s: impl ToString) -> Json<ErrorResposne> {
-    Json(ErrorResposne {
+fn err(s: impl ToString) -> Json<ErrorResponse> {
+    Json(ErrorResponse {
         message: s.to_string(),
     })
 }

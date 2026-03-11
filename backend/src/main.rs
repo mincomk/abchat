@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use backend::{
-    AppConfig, AppState, api::router::create_router, persistence::postgres::PostgresPersistence,
-    pubsub::redis::RedisMessagePubSub,
+    AppConfig, AppState, api::router::create_router, onboard::init_admin_account,
+    persistence::postgres::PostgresPersistence, pubsub::redis::RedisMessagePubSub,
 };
 use git_version::git_version;
 use tokio::net::TcpListener;
@@ -23,6 +23,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pg = PostgresPersistence::connect(&config.postgres_url).await?;
     let redis = RedisMessagePubSub::connect(&config.redis_url).await?;
 
+    pg.init_db().await?;
+
     tracing::info!("Infrastructure loaded");
 
     let state = AppState {
@@ -30,6 +32,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         pubsub: Arc::new(redis),
         jwt_secret: config.jwt_secret.as_bytes().to_vec(),
     };
+
+    init_admin_account(&config, &state).await?;
 
     let router = create_router(state);
 

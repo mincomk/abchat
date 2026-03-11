@@ -40,23 +40,13 @@ async fn handle_socket(socket: WebSocket, state: AppState, channel_id: String) {
     let (sender, receiver) = socket.split();
     let sender = Arc::new(Mutex::new(sender));
 
-    let r = tokio::spawn({
-        let sender_c = sender.clone();
-        let state_c = state.clone();
-        let channel_id_c = channel_id.clone();
-        async move {
-            run_receiver_loop(receiver, sender_c, state_c, session_state, channel_id_c).await;
-        }
-    });
+    run_receiver_loop(receiver, sender, state, session_state, channel_id).await;
+}
 
-    let s = tokio::spawn({
-        let sender_c = sender.clone();
-        async move {
-            run_sender_loop(sender_c, state, channel_id).await;
-        }
+async fn spawn_sender(sender: ArcSender, state: AppState, channel_id: String) {
+    tokio::spawn(async move {
+        run_sender_loop(sender, state, channel_id).await;
     });
-
-    let _ = tokio::join!(s, r);
 }
 
 #[instrument(level = "info", name = "Handling {session_state}", skip_all)]
@@ -90,11 +80,17 @@ async fn run_receiver_loop(
         match receiver.next().await {
             Some(Ok(msg)) => match decode_message::<WsPacketC2S>(msg) {
                 Ok(data) => {
-                    if let Err(e) =
-                        handle_message(session_state.clone(), state.clone(), data, &channel_id)
-                            .await
+                    if let Err(e) = handle_message(
+                        session_state.clone(),
+                        state.clone(),
+                        sender.clone(),
+                        data,
+                        &channel_id,
+                    )
+                    .await
                     {
-                        if let Err(_) = send_error(sender.clone(), &e.to_string()).await {
+                        tracing::warn!("Server error while receiving in websocket: {:?}", e);
+                        if let Err(_) = send_error(sender.clone(), "Internal Server Error").await {
                             break;
                         }
                     }
@@ -120,6 +116,7 @@ async fn run_receiver_loop(
 async fn handle_message(
     ss_arc: Arc<Mutex<SessionState>>,
     state: AppState,
+    sender: ArcSender,
     data: WsPacketC2S,
     channel_id: &str,
 ) -> AppResult<()> {
@@ -129,6 +126,8 @@ async fn handle_message(
             if session_state.username.is_none() {
                 let user = jwt::auth_user(&state, &identify.token).await?;
                 ss_arc.lock().await.username.replace(user.username);
+
+                spawn_sender(sender.clone(), state.clone(), channel_id.to_string()).await;
             } else {
                 return Err(AuthError::AlreadyAuthenticated.into());
             }
@@ -146,6 +145,8 @@ async fn handle_message(
                 content: message.content,
                 timestamp: util::now_u64(),
             };
+
+            state.persistence.add_message(message.clone()).await?;
 
             if let Err(e) = state.pubsub.publish(&channel_id, message).await {
                 tracing::warn!("Failed to publish message: {e}");

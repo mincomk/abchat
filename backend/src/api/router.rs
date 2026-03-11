@@ -1,4 +1,5 @@
-use axum::{Router, routing::get};
+use axum::{routing::get, Router};
+
 use tower_http::trace::TraceLayer;
 use utoipa::openapi::OpenApi;
 use utoipa_axum::{router::OpenApiRouter, routes};
@@ -10,7 +11,12 @@ use super::routes::*;
 
 pub fn create_router(state: AppState) -> Router {
     let (router, api): (Router<_>, OpenApi) = OpenApiRouter::new()
-        .routes(routes!(list_users, delete_user))
+        .routes(routes!(
+            list_users,
+            delete_user,
+            login_handler,
+            register_user
+        ))
         .split_for_parts();
 
     let swagger = SwaggerUi::new("/swagger-ui").url("/openapi.json", api.clone());

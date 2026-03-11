@@ -1,13 +1,31 @@
-use jsonwebtoken::{DecodingKey, Validation, decode};
+use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
 
-use crate::{AppResult, AppState, User, auth::AuthError};
+use crate::{AppResult, AppState, User, auth::AuthError, util};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     pub sub: String, // username
     pub iat: usize,
     pub exp: usize,
+    pub is_admin: bool,
+}
+
+pub fn sign_token(secret: &[u8], username: &str, is_admin: bool) -> AppResult<String> {
+    let now = util::now_u64() / 1000;
+    let claims = Claims {
+        sub: username.to_string(),
+        iat: now as usize,
+        exp: (now + 24 * 3600) as usize,
+        is_admin,
+    };
+
+    encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(secret),
+    )
+    .map_err(|_| AuthError::InvalidToken.into())
 }
 
 pub fn verify_token(secret: &[u8], token: &str) -> AppResult<Claims> {

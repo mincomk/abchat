@@ -29,7 +29,7 @@ impl Persistence for InMemoryPersistence {
     }
 
     async fn get_user(&self, username: &str) -> AppResult<Option<User>> {
-        Ok(self.users.get(username).map(|u| u.clone()))
+        Ok(self.users.get(username).map(|u| kv_to_user(&u)))
     }
 
     async fn delete_user(&self, username: &str) -> AppResult<()> {
@@ -61,4 +61,8 @@ impl Persistence for InMemoryPersistence {
             Ok(vec![])
         }
     }
+}
+
+fn kv_to_user(u: &User) -> User {
+    u.clone()
 }
