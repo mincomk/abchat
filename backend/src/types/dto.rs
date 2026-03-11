@@ -16,7 +16,7 @@ pub struct LoginResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub struct RegisterRequest {
+pub struct CreateUser {
     pub username: String,
     pub password: String,
     pub nickname: String,

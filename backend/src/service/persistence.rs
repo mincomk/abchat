@@ -14,6 +14,9 @@ pub trait Persistence: Send + Sync {
     async fn get_user(&self, username: &str) -> AppResult<Option<User>>;
     async fn delete_user(&self, username: &str) -> AppResult<()>;
 
+    async fn get_password_hash(&self, username: &str) -> AppResult<Option<String>>;
+    async fn set_password_hash(&self, username: &str, hash: &str) -> AppResult<()>;
+
     async fn add_message(&self, message: Message) -> AppResult<()>;
     async fn list_messages(
         &self,

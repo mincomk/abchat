@@ -23,17 +23,22 @@ pub async fn handle_packet(
             }
         }
         WsPacketC2S::SendMessage(msg) => {
-            if session.username.is_none() {
-                return Err(AuthError::Unauthorized.into());
-            }
+            let username = session.username.as_ref().ok_or(AuthError::Unauthorized)?;
 
             validate_message(&msg.content)?;
+
+            let user = state
+                .persistence
+                .get_user(username)
+                .await?
+                .ok_or(AuthError::Unauthorized)?;
 
             let message = Message {
                 id: Uuid::new_v4().to_string(),
                 channel_id: channel_id.to_string(),
                 content: msg.content,
                 timestamp: util::now_u64(),
+                sender: user,
             };
 
             state.persistence.add_message(message.clone()).await?;

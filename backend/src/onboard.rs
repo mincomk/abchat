@@ -12,9 +12,13 @@ pub async fn init_admin_account(config: &AppConfig, state: &AppState) -> AppResu
             .save_user(User {
                 username: username.to_string(),
                 nickname: username.to_string(),
-                password_hash: password_hash.to_string(),
                 is_admin: true,
             })
+            .await?;
+        
+        state
+            .persistence
+            .set_password_hash(username, password_hash)
             .await?;
     } else {
         tracing::info!("Admin account is not present. Skipping admin creation.");

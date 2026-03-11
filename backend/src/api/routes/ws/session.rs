@@ -1,14 +1,17 @@
+use axum::extract::ws::{self, WebSocket};
+use futures_util::{
+    SinkExt, StreamExt,
+    stream::{SplitSink, SplitStream},
+};
 use std::time::Duration;
 use tokio::time::interval;
-use futures_util::{SinkExt, StreamExt, stream::{SplitSink, SplitStream}};
-use axum::extract::ws::{self, WebSocket};
-use tracing::{info, warn, instrument};
+use tracing::{info, instrument, warn};
 
-use crate::{
-    AppState, SessionState, WsError, WsPacketC2S, WsPacketS2C,
-    AppResult, service::pubsub::MessageSubscriber,
-};
 use super::handler;
+use crate::{
+    AppResult, AppState, SessionState, WsError, WsPacketC2S, WsPacketS2C,
+    service::pubsub::MessageSubscriber,
+};
 
 pub struct WsActor {
     state: AppState,
@@ -44,7 +47,7 @@ impl WsActor {
                         break;
                     }
                 }
-                
+
                 res = async {
                     if let Some(sub) = self.subscriber.as_ref() {
                         sub.next().await
@@ -80,7 +83,7 @@ impl WsActor {
                         }
                         Some(Ok(_)) => (),
                         Some(Err(e)) => {
-                            warn!("WebSocket error: {:?}", e);
+                            tracing::debug!("WebSocket error: {:?}", e);
                             break;
                         }
                         None => break,
@@ -99,7 +102,14 @@ impl WsActor {
             }
         };
 
-        match handler::handle_packet(&self.state, &mut self.session_state, packet, &self.channel_id).await {
+        match handler::handle_packet(
+            &self.state,
+            &mut self.session_state,
+            packet,
+            &self.channel_id,
+        )
+        .await
+        {
             Ok(auth_success) => {
                 if auth_success {
                     match self.state.pubsub.subscribe(&self.channel_id).await {
@@ -127,7 +137,9 @@ impl WsActor {
 
     async fn send_packet(&mut self, packet: WsPacketS2C) -> AppResult<()> {
         let text = serde_json::to_string(&packet)?;
-        self.sink.send(ws::Message::Text(text.into())).await
+        self.sink
+            .send(ws::Message::Text(text.into()))
+            .await
             .map_err(|e| crate::ServiceError::Internal(e.to_string()).into())
     }
 

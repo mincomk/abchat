@@ -21,13 +21,14 @@ pub async fn login_handler(
     Json(payload): Json<LoginRequest>,
 ) -> AppResult<Json<LoginResponse>> {
     let user = state.persistence.get_user(&payload.username).await?;
+    let hash = state.persistence.get_password_hash(&payload.username).await?;
 
-    let hash = match &user {
-        Some(u) => &u.password_hash,
+    let hash_str = match &hash {
+        Some(h) => h,
         None => DUMMY_HASH,
     };
 
-    if !verify_password(hash, &payload.password)? || user.is_none() {
+    if !verify_password(hash_str, &payload.password)? || user.is_none() {
         return Err(AuthError::InvalidCredentials.into());
     }
 

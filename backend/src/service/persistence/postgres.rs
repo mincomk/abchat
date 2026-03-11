@@ -39,8 +39,16 @@ impl PostgresPersistence {
                 id TEXT PRIMARY KEY,
                 content TEXT NOT NULL,
                 timestamp BIGINT NOT NULL,
-                channel_id TEXT NOT NULL
+                channel_id TEXT NOT NULL,
+                sender_username TEXT NOT NULL REFERENCES users(username)
             )",
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
+
+        sqlx::query(
+            "ALTER TABLE messages ADD COLUMN IF NOT EXISTS sender_username TEXT REFERENCES users(username)",
         )
         .execute(&self.pool)
         .await
@@ -62,16 +70,14 @@ impl Persistence for PostgresPersistence {
     async fn save_user(&self, u: User) -> AppResult<()> {
         sqlx::query(
             "INSERT INTO users (username, nickname, is_admin, password_hash)
-            VALUES ($1, $2, $3, $4)
+            VALUES ($1, $2, $3, '')
             ON CONFLICT (username) DO UPDATE SET
             nickname = EXCLUDED.nickname,
-            is_admin = EXCLUDED.is_admin,
-            password_hash = EXCLUDED.password_hash",
+            is_admin = EXCLUDED.is_admin",
         )
         .bind(&u.username)
         .bind(&u.nickname)
         .bind(u.is_admin)
-        .bind(&u.password_hash)
         .execute(&self.pool)
         .await
         .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
@@ -80,7 +86,7 @@ impl Persistence for PostgresPersistence {
     }
 
     async fn list_users(&self) -> AppResult<Vec<User>> {
-        let rows = sqlx::query("SELECT username, nickname, is_admin, password_hash FROM users")
+        let rows = sqlx::query("SELECT username, nickname, is_admin FROM users")
             .fetch_all(&self.pool)
             .await
             .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
@@ -91,7 +97,6 @@ impl Persistence for PostgresPersistence {
                 username: r.get("username"),
                 nickname: r.get("nickname"),
                 is_admin: r.get("is_admin"),
-                password_hash: r.get("password_hash"),
             })
             .collect();
 
@@ -99,7 +104,7 @@ impl Persistence for PostgresPersistence {
     }
 
     async fn get_user(&self, username: &str) -> AppResult<Option<User>> {
-        let row = sqlx::query("SELECT username, nickname, is_admin, password_hash FROM users WHERE username = $1")
+        let row = sqlx::query("SELECT username, nickname, is_admin FROM users WHERE username = $1")
             .bind(username)
             .fetch_optional(&self.pool)
             .await
@@ -109,7 +114,6 @@ impl Persistence for PostgresPersistence {
             username: r.get("username"),
             nickname: r.get("nickname"),
             is_admin: r.get("is_admin"),
-            password_hash: r.get("password_hash"),
         });
 
         Ok(user)
@@ -125,15 +129,37 @@ impl Persistence for PostgresPersistence {
         Ok(())
     }
 
+    async fn get_password_hash(&self, username: &str) -> AppResult<Option<String>> {
+        let row = sqlx::query("SELECT password_hash FROM users WHERE username = $1")
+            .bind(username)
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
+
+        Ok(row.map(|r| r.get("password_hash")))
+    }
+
+    async fn set_password_hash(&self, username: &str, hash: &str) -> AppResult<()> {
+        sqlx::query("UPDATE users SET password_hash = $1 WHERE username = $2")
+            .bind(hash)
+            .bind(username)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
+
+        Ok(())
+    }
+
     async fn add_message(&self, message: Message) -> AppResult<()> {
         sqlx::query(
-            "INSERT INTO messages (id, content, timestamp, channel_id)
-            VALUES ($1, $2, $3, $4)",
+            "INSERT INTO messages (id, content, timestamp, channel_id, sender_username)
+            VALUES ($1, $2, $3, $4, $5)",
         )
         .bind(&message.id)
         .bind(&message.content)
         .bind(message.timestamp as i64)
         .bind(&message.channel_id)
+        .bind(&message.sender.username)
         .execute(&self.pool)
         .await
         .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
@@ -148,7 +174,14 @@ impl Persistence for PostgresPersistence {
         offset: u32,
     ) -> AppResult<Vec<Message>> {
         let rows = sqlx::query(
-            "SELECT id, content, timestamp, channel_id FROM messages WHERE channel_id = $1 ORDER BY timestamp DESC LIMIT $2 OFFSET $3"
+            "SELECT 
+                m.id, m.content, m.timestamp, m.channel_id,
+                u.username, u.nickname, u.is_admin
+            FROM messages m
+            JOIN users u ON m.sender_username = u.username
+            WHERE m.channel_id = $1 
+            ORDER BY m.timestamp DESC 
+            LIMIT $2 OFFSET $3"
         )
         .bind(channel_id)
         .bind(limit as i64)
@@ -164,6 +197,11 @@ impl Persistence for PostgresPersistence {
                 content: r.get("content"),
                 timestamp: r.get::<i64, _>("timestamp") as u64,
                 channel_id: r.get("channel_id"),
+                sender: User {
+                    username: r.get("username"),
+                    nickname: r.get("nickname"),
+                    is_admin: r.get("is_admin"),
+                },
             })
             .collect();
 

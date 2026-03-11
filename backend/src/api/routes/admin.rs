@@ -5,7 +5,7 @@ use axum::{
 };
 
 use crate::{
-    AppResult, AppState, RegisterRequest, User, UserError,
+    AppResult, AppState, CreateUser, User, UserError,
     auth::{AdminUser, hash::hash_password},
 };
 
@@ -14,7 +14,7 @@ use crate::{
     path = "/admin/register",
     tag = "admin",
     security(("bearer_auth" = [])),
-    request_body = RegisterRequest,
+    request_body = CreateUser,
     responses(
         (status = 201, description = "User registered"),
         (status = 401, description = "Unauthorized"),
@@ -24,7 +24,7 @@ use crate::{
 pub async fn register_user(
     State(state): State<AppState>,
     _admin: AdminUser,
-    Json(payload): Json<RegisterRequest>,
+    Json(payload): Json<CreateUser>,
 ) -> AppResult<StatusCode> {
     if state
         .persistence
@@ -38,13 +38,13 @@ pub async fn register_user(
     let password_hash = hash_password(&payload.password)?;
 
     let user = User {
-        username: payload.username,
+        username: payload.username.clone(),
         nickname: payload.nickname,
         is_admin: false,
-        password_hash,
     };
 
     state.persistence.save_user(user).await?;
+    state.persistence.set_password_hash(&payload.username, &password_hash).await?;
 
     Ok(StatusCode::CREATED)
 }
