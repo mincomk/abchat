@@ -10,7 +10,7 @@ i18n
     .use(initReactI18next)
     .init({
         resources: {
-            //en: { translation: en },
+            en: { translation: en },
             ko: { translation: ko },
         },
         fallbackLng: 'ko',

@@ -25,6 +25,46 @@ const hashString = (str: string): number => {
     return Math.abs(hash);
 };
 
+const FormattedMessage: React.FC<{ content: string }> = ({ content }) => {
+    const regex = /<(@&|@|#)([^:]+):([^>]+)>/g;
+    const parts: (string | React.ReactNode)[] = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(content)) !== null) {
+        if (match.index > lastIndex) {
+            parts.push(content.slice(lastIndex, match.index));
+        }
+
+        const prefix = match[1];
+        const name = match[2];
+        const id = match[3];
+
+        let colorClass = '';
+        if (prefix === '@&') {
+            colorClass = 'text-[#faa61a]'; // Role - Orange
+        } else if (prefix === '@') {
+            colorClass = 'text-[#00aaff]'; // User - Cyan
+        } else if (prefix === '#') {
+            colorClass = 'text-[#a0f]';   // Channel - Purple
+        }
+
+        parts.push(
+            <span key={`${id}-${match.index}`} className={`${colorClass} font-semibold cursor-default`}>
+                @{name}
+            </span>
+        );
+
+        lastIndex = regex.lastIndex;
+    }
+
+    if (lastIndex < content.length) {
+        parts.push(content.slice(lastIndex));
+    }
+
+    return <>{parts.length > 0 ? parts : content}</>;
+};
+
 export const MessageRow: React.FC<MessageRowProps> = ({ msg }) => {
     const isSystem = msg.type === 'system';
 
@@ -40,7 +80,9 @@ export const MessageRow: React.FC<MessageRowProps> = ({ msg }) => {
             {isSystem ? (
                 <>
                     <span className="text-[#666] text-[10px] min-w-[45px]">[SYSTEM]</span>
-                    <span className={`flex-1 break-all ${senderColor}`}>{msg.content}</span>
+                    <span className={`flex-1 break-all ${senderColor}`}>
+                        <FormattedMessage content={msg.content} />
+                    </span>
                 </>
             ) : (
                 <>
@@ -50,7 +92,9 @@ export const MessageRow: React.FC<MessageRowProps> = ({ msg }) => {
                     <span className={`font-bold min-w-[80px] text-right ${senderColor}`}>
                         &lt;{msg.sender!.nickname}&gt;
                     </span>
-                    <span className="flex-1 break-all">{msg.content}</span>
+                    <span className="flex-1 break-all">
+                        <FormattedMessage content={msg.content} />
+                    </span>
                 </>
             )}
         </div>
