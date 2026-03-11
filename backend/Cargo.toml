@@ -8,6 +8,7 @@ default-run = "backend"
 argon2 = "0.5.3"
 async-trait = "0.1.89"
 axum = { version = "0.8.8", features = ["macros", "ws"] }
+ctrlc = { version = "3.5.2", features = ["termination"] }
 dashmap = "6.1.0"
 dotenvy = "0.15.7"
 envy = "0.4.2"

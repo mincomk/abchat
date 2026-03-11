@@ -13,7 +13,8 @@ RUN npm install -g pnpm@10.26.1
 COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 
 # Copy the source code
 COPY . .
@@ -33,7 +34,8 @@ RUN npm install -g pnpm@10.26.1
 COPY package.json pnpm-lock.yaml ./
 
 # Install production dependencies only
-RUN pnpm install --prod --frozen-lockfile
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install --prod --frozen-lockfile
 
 # Copy the built files from the build stage
 COPY --from=builder /usr/src/bot/dist ./dist

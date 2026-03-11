@@ -1,3 +1,5 @@
+import axios, { type AxiosInstance, isAxiosError } from 'axios';
+
 export interface User {
     username: string;
     nickname: string;
@@ -19,6 +21,23 @@ export interface LoginResponse {
     user: User;
 }
 
+const getBaseUrl = (): string => {
+    let baseUrl = import.meta.env.VITE_API_BASE_URL;
+    if (!baseUrl) {
+        baseUrl = `${window.location.protocol}//${window.location.host}`;
+    }
+    return baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+};
+
+const getWsBaseUrl = (): string => {
+    let baseUrl = import.meta.env.VITE_WS_BACKEND_URL;
+    if (!baseUrl) {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        baseUrl = `${protocol}//${window.location.host}`;
+    }
+    return baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+};
+
 export class DBridgeClient {
     #ws: WebSocket | null = null;
     #onMessageCallback: ((msg: Message) => void) | null = null;
@@ -30,9 +49,20 @@ export class DBridgeClient {
     #token: string | null = null;
     #nickname: string | null = null;
     #shouldReconnect = true;
+    #axios: AxiosInstance;
 
     constructor(channelId: string) {
         this.#channelId = channelId;
+        this.#axios = axios.create({
+            baseURL: getBaseUrl(),
+        });
+
+        this.#axios.interceptors.request.use((config) => {
+            if (this.#token) {
+                config.headers.Authorization = `Bearer ${this.#token}`;
+            }
+            return config;
+        });
     }
 
     get channelId() {
@@ -49,8 +79,15 @@ export class DBridgeClient {
         const stored = localStorage.getItem(`dbridge_auth_${this.#channelId}`);
         if (stored) {
             try {
-                return JSON.parse(stored);
-            } catch (e) {
+                const creds = JSON.parse(stored);
+                if (creds.token) {
+                    this.#token = creds.token;
+                }
+                if (creds.nickname) {
+                    this.#nickname = creds.nickname;
+                }
+                return creds;
+            } catch {
                 return null;
             }
         }
@@ -64,86 +101,66 @@ export class DBridgeClient {
     }
 
     async login(username: string, password: string): Promise<LoginResponse> {
-        let baseUrl = import.meta.env.VITE_API_BASE_URL;
-
-        if (!baseUrl) {
-            baseUrl = `${window.location.protocol}//${window.location.host}`;
+        try {
+            const response = await this.#axios.post<LoginResponse>('auth/login', { username, password });
+            return response.data;
+        } catch (error) {
+            let message = 'Unknown error';
+            if (isAxiosError(error)) {
+                message = error.response?.data || error.message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
+            throw new Error(`Login failed: ${message}`);
         }
-
-        const url = new URL('/auth/login', baseUrl);
-
-        const response = await fetch(url.toString(), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ username, password })
-        });
-
-        if (!response.ok) {
-            const text = await response.text();
-            throw new Error(`Login failed: ${text}`);
-        }
-
-        return await response.json();
     }
 
     async listUsers(): Promise<User[]> {
         if (!this.#token) throw new Error('Not authenticated');
 
-        let baseUrl = import.meta.env.VITE_API_BASE_URL;
-        if (!baseUrl) baseUrl = `${window.location.protocol}//${window.location.host}`;
-
-        const url = new URL('/admin/accounts', baseUrl);
-        const response = await fetch(url.toString(), {
-            headers: { 'Authorization': `Bearer ${this.#token}` }
-        });
-
-        if (!response.ok) {
-            const text = await response.text();
-            throw new Error(`Failed to list users: ${text}`);
+        try {
+            const response = await this.#axios.get<User[]>('admin/accounts');
+            return response.data;
+        } catch (error) {
+            let message = 'Unknown error';
+            if (isAxiosError(error)) {
+                message = error.response?.data || error.message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
+            throw new Error(`Failed to list users: ${message}`);
         }
-
-        return await response.json();
     }
 
-    async registerUser(data: any): Promise<void> {
+    async registerUser(data: Record<string, unknown>): Promise<void> {
         if (!this.#token) throw new Error('Not authenticated');
 
-        let baseUrl = import.meta.env.VITE_API_BASE_URL;
-        if (!baseUrl) baseUrl = `${window.location.protocol}//${window.location.host}`;
-
-        const url = new URL('/admin/register', baseUrl);
-        const response = await fetch(url.toString(), {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${this.#token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
-
-        if (!response.ok) {
-            const text = await response.text();
-            throw new Error(`Failed to register user: ${text}`);
+        try {
+            await this.#axios.post('admin/register', data);
+        } catch (error) {
+            let message = 'Unknown error';
+            if (isAxiosError(error)) {
+                message = error.response?.data || error.message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
+            throw new Error(`Failed to register user: ${message}`);
         }
     }
 
     async deleteUser(username: string): Promise<void> {
         if (!this.#token) throw new Error('Not authenticated');
 
-        let baseUrl = import.meta.env.VITE_API_BASE_URL;
-        if (!baseUrl) baseUrl = `${window.location.protocol}//${window.location.host}`;
-
-        const url = new URL(`/admin/accounts/${username}`, baseUrl);
-        const response = await fetch(url.toString(), {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${this.#token}` }
-        });
-
-        if (!response.ok) {
-            const text = await response.text();
-            throw new Error(`Failed to delete user: ${text}`);
+        try {
+            await this.#axios.delete(`admin/accounts/${username}`);
+        } catch (error) {
+            let message = 'Unknown error';
+            if (isAxiosError(error)) {
+                message = error.response?.data || error.message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
+            throw new Error(`Failed to delete user: ${message}`);
         }
     }
 
@@ -152,28 +169,20 @@ export class DBridgeClient {
             throw new Error('Identification token is missing');
         }
 
-        let baseUrl = import.meta.env.VITE_API_BASE_URL;
-
-        if (!baseUrl) {
-            baseUrl = `${window.location.protocol}//${window.location.host}`;
-        }
-
-        const url = new URL(`/channels/${this.#channelId}/messages`, baseUrl);
-        url.searchParams.set('limit', limit.toString());
-        url.searchParams.set('offset', offset.toString());
-
-        const response = await fetch(url.toString(), {
-            headers: {
-                'Authorization': `Bearer ${this.#token}`
+        try {
+            const response = await this.#axios.get<Message[]>(`channels/${this.#channelId}/messages`, {
+                params: { limit, offset }
+            });
+            return response.data;
+        } catch (error) {
+            let message = 'Unknown error';
+            if (isAxiosError(error)) {
+                message = error.response?.data || error.message;
+            } else if (error instanceof Error) {
+                message = error.message;
             }
-        });
-
-        if (!response.ok) {
-            const text = await response.text();
-            throw new Error(`Failed to fetch messages: ${text}`);
+            throw new Error(`Failed to fetch messages: ${message}`);
         }
-
-        return await response.json();
     }
 
     connect() {
@@ -188,15 +197,7 @@ export class DBridgeClient {
         this.#shouldReconnect = true;
         this.#clearReconnectTimer();
 
-        let baseUrl = import.meta.env.VITE_WS_BACKEND_URL;
-
-        if (!baseUrl) {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const host = window.location.host;
-            baseUrl = `${protocol}//${host}`;
-        }
-
-        const url = `${baseUrl}/ws/${this.#channelId}`;
+        const url = `${getWsBaseUrl()}ws/${this.#channelId}`;
 
         console.log(`Connecting to ${url}...`);
         this.#ws = new WebSocket(url);
@@ -221,7 +222,7 @@ export class DBridgeClient {
                 } else {
                     this.#onErrorCallback?.(event.data);
                 }
-            } catch (e) {
+            } catch {
                 this.#onErrorCallback?.(event.data);
             }
         };

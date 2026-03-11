@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{process::exit, sync::Arc};
 
 use backend::{
     AppConfig, AppState, api::router::create_router, chat::ChatManager,
@@ -18,6 +18,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt().with_env_filter(env_filter).init();
 
     tracing::info!("Hello. ABChat");
+
+    ctrlc::set_handler(|| {
+        tracing::info!("Bye.");
+        exit(0);
+    })?;
 
     let config = AppConfig::from_env()?;
 

@@ -33,5 +33,7 @@ pub fn create_router(state: AppState) -> Router {
         .layer(cors)
         .layer(TraceLayer::new_for_http());
 
+    let router = Router::new().nest("/api", router);
+
     router.with_state(state)
 }

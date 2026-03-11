@@ -7,7 +7,11 @@ WORKDIR /usr/src/backend
 COPY . .
 
 # Build the application
-RUN cargo build --release
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    --mount=type=cache,target=/usr/src/backend/target \
+    cargo build --release && \
+    cp target/release/backend /usr/local/bin/backend
 
 # Runtime stage
 FROM debian:bookworm-slim
@@ -21,7 +25,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /usr/local/bin
 
 # Copy the binary from the build stage
-COPY --from=builder /usr/src/backend/target/release/backend .
+COPY --from=builder /usr/local/bin/backend .
 
 # Expose the default port
 EXPOSE 8080
