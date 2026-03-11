@@ -4,10 +4,13 @@ use dashmap::DashSet;
 use tracing::{debug, error};
 
 use crate::{
+    NotificationMode,
     chat::{ChatSession, make_topic},
     persistence::Persistence,
     pubsub::MessagePubSub,
+    service::notifications::NotificationService,
 };
+use regex::Regex;
 
 pub struct PersistenceBroker {
     session: ChatSession,
@@ -144,6 +147,81 @@ impl PubSubBroker {
 
         debug!(
             "PubSub broker stopped for channel: {}",
+            self.session.channel_id
+        );
+    }
+}
+
+pub struct NotificationBroker {
+    session: ChatSession,
+    notification_service: Arc<NotificationService>,
+}
+
+impl NotificationBroker {
+    pub fn new(
+        session: ChatSession,
+        notification_service: Arc<NotificationService>,
+    ) -> Self {
+        Self {
+            session,
+            notification_service,
+        }
+    }
+
+    pub async fn run(self) {
+        debug!(
+            "Notification broker started for channel: {}",
+            self.session.channel_id
+        );
+
+        let mention_re = Regex::new(r"@\(([^)]+)\)").unwrap();
+
+        loop {
+            match self.session.recv().await {
+                Ok(msg) => {
+                    let mut target_modes = vec![NotificationMode::All];
+                    let mut targeted_usernames = Vec::new();
+                    let mut is_everyone = false;
+
+                    for cap in mention_re.captures_iter(&msg.content) {
+                        let mention = &cap[1];
+                        if mention == "everyone" {
+                            is_everyone = true;
+                        } else {
+                            targeted_usernames.push(mention.to_string());
+                        }
+                    }
+
+                    if is_everyone {
+                        target_modes.push(NotificationMode::Critical);
+                    }
+
+                    let title = format!("Message from {}", msg.sender.nickname);
+                    let body = msg.content.clone();
+
+                    if let Err(e) = self
+                        .notification_service
+                        .send_targeted_notification(
+                            &title,
+                            &body,
+                            target_modes,
+                            targeted_usernames,
+                            Some(msg.sender.username),
+                        )
+                        .await
+                    {
+                        error!("Notification broker failed to send notification: {:?}", e);
+                    }
+                }
+                Err(e) => {
+                    error!("Notification broker session receive error: {:?}", e);
+                    break;
+                }
+            }
+        }
+
+        debug!(
+            "Notification broker stopped for channel: {}",
             self.session.channel_id
         );
     }

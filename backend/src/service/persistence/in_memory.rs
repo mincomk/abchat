@@ -126,6 +126,30 @@ impl Persistence for InMemoryPersistence {
         self.user_settings.insert(username.to_string(), mode);
         Ok(())
     }
+
+    async fn get_subscriptions_by_mode(
+        &self,
+        modes: Vec<NotificationMode>,
+    ) -> AppResult<Vec<Subscription>> {
+        let mut results = Vec::new();
+
+        for kv in self.subscriptions.iter() {
+            let username = kv.key();
+            let subs = kv.value();
+
+            let user_mode = self
+                .user_settings
+                .get(username)
+                .map(|v| v.value().clone())
+                .unwrap_or(NotificationMode::All);
+
+            if modes.contains(&user_mode) {
+                results.extend(subs.clone());
+            }
+        }
+
+        Ok(results)
+    }
 }
 
 fn kv_to_user(u: &User) -> User {

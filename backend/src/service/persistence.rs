@@ -36,4 +36,9 @@ pub trait Persistence: Send + Sync {
         username: &str,
         mode: NotificationMode,
     ) -> AppResult<()>;
+
+    async fn get_subscriptions_by_mode(
+        &self,
+        modes: Vec<NotificationMode>,
+    ) -> AppResult<Vec<Subscription>>;
 }

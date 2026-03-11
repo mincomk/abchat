@@ -6,15 +6,17 @@ use tokio::task::JoinHandle;
 
 use crate::{
     Message,
-    chat::{ChatSession, PersistenceBroker, PubSubBroker},
+    chat::{ChatSession, NotificationBroker, PersistenceBroker, PubSubBroker},
     persistence::Persistence,
     pubsub::MessagePubSub,
+    service::notifications::NotificationService,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BrokerType {
     Persistence,
     PubSub,
+    Notification,
 }
 
 #[derive(Clone)]
@@ -23,15 +25,21 @@ pub struct ChatManager {
     brokers: Arc<DashMap<(String, BrokerType), JoinHandle<()>>>,
     persistence: Arc<dyn Persistence>,
     external_pubsub: Arc<dyn MessagePubSub>,
+    notification_service: Arc<NotificationService>,
 }
 
 impl ChatManager {
-    pub fn new(persistence: Arc<dyn Persistence>, external_pubsub: Arc<dyn MessagePubSub>) -> Self {
+    pub fn new(
+        persistence: Arc<dyn Persistence>,
+        external_pubsub: Arc<dyn MessagePubSub>,
+        notification_service: Arc<NotificationService>,
+    ) -> Self {
         Self {
             pubsub: Pubsub::new(),
             brokers: Arc::new(DashMap::new()),
             persistence,
             external_pubsub,
+            notification_service,
         }
     }
 
@@ -40,6 +48,7 @@ impl ChatManager {
 
         self.ensure_persistence_broker(channel_id).await;
         self.ensure_pubsub_broker(channel_id).await;
+        self.ensure_notification_broker(channel_id).await;
 
         session
     }
@@ -76,6 +85,26 @@ impl ChatManager {
             let handle = tokio::spawn(async move {
                 let session = ChatSession::new(&channel_id, false, pubsub_rs).await;
                 let broker = PubSubBroker::new(session, external_pubsub);
+                broker.run().await;
+                brokers.remove(&key_clone);
+            });
+
+            e.insert(handle);
+        }
+    }
+
+    async fn ensure_notification_broker(&self, channel_id: &str) {
+        let key = (channel_id.to_string(), BrokerType::Notification);
+        if let dashmap::mapref::entry::Entry::Vacant(e) = self.brokers.entry(key.clone()) {
+            let channel_id = channel_id.to_string();
+            let notification_service = self.notification_service.clone();
+            let pubsub_rs = self.pubsub.clone();
+            let brokers = self.brokers.clone();
+            let key_clone = key.clone();
+
+            let handle = tokio::spawn(async move {
+                let session = ChatSession::new(&channel_id, false, pubsub_rs).await;
+                let broker = NotificationBroker::new(session, notification_service);
                 broker.run().await;
                 brokers.remove(&key_clone);
             });

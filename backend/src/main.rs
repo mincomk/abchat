@@ -31,16 +31,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     pg.init_db().await?;
 
+    let notification_service = Arc::new(backend::service::notifications::NotificationService::new(
+        pg.clone(),
+        config.vapid_public_key.clone(),
+        config.vapid_private_key.clone(),
+    ));
+
     tracing::info!("Infrastructure loaded");
 
     let state = AppState {
         persistence: pg.clone(),
         pubsub: redis.clone(),
-        chat_manager: ChatManager::new(pg, redis),
+        chat_manager: ChatManager::new(pg, redis, notification_service.clone()),
+        notification_service,
         jwt_secret: config.jwt_secret.as_bytes().to_vec(),
         vapid_public_key: config.vapid_public_key.clone(),
         vapid_private_key: config.vapid_private_key.clone(),
     };
+
 
     init_admin_account(&config, &state).await?;
 

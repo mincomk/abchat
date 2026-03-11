@@ -318,4 +318,34 @@ impl Persistence for PostgresPersistence {
 
         Ok(())
     }
+
+    async fn get_subscriptions_by_mode(
+        &self,
+        modes: Vec<NotificationMode>,
+    ) -> AppResult<Vec<Subscription>> {
+        let modes_str: Vec<String> = modes.into_iter().map(|m| m.to_string()).collect();
+
+        let rows = sqlx::query(
+            "SELECT s.username, s.endpoint, s.p256dh, s.auth 
+             FROM subscriptions s
+             LEFT JOIN user_settings us ON s.username = us.username
+             WHERE COALESCE(us.notification_mode, 'All') = ANY($1)",
+        )
+        .bind(&modes_str)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|e| AppError::Service(ServiceError::Database(e)))?;
+
+        let subs = rows
+            .into_iter()
+            .map(|r| Subscription {
+                username: r.get("username"),
+                endpoint: r.get("endpoint"),
+                p256dh: r.get("p256dh"),
+                auth: r.get("auth"),
+            })
+            .collect();
+
+        Ok(subs)
+    }
 }

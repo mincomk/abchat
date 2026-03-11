@@ -32,6 +32,9 @@ The backend uses a `Persistence` trait (`src/service/persistence.rs`) to abstrac
 - **Persistence Layer**: The `save_user` method handles both insertion and updates (via `ON CONFLICT` in Postgres). 
 - **Push Notifications**:
     - **Backend**: `notifications.rs` handles VAPID key delivery, subscription storage, and user settings.
+    - **NotificationService**: Central service for sending Web Push notifications using `web-push` crate. Supports targeted notifications based on user mentions.
+    - **NotificationBroker**: Chat broker that listens for messages and triggers notifications for `All` mode users and `Critical` mode users (when mentioned).
+    - **Persistence**: `get_subscriptions_by_mode` allows filtering subscriptions by user notification preferences.
     - **Frontend**: `notifications.ts` bridges the browser `PushManager` with the `DBridgeClient`.
     - **Environment**: Requires `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` in the backend `.env`.
 - **Modifying Schema**: Update `init_db` in `postgres.rs` and the `User` struct/trait methods accordingly.
