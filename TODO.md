@@ -1,2 +1,0 @@
-- [ ] Add Discord bot
-- [x] Add bootstrap code
