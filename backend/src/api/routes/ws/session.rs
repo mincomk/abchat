@@ -91,7 +91,7 @@ impl WsActor {
                 }
             }
         }
-        info!("WebSocket session terminated.");
+        tracing::debug!("WebSocket session terminated.");
     }
 
     async fn handle_text_message(&mut self, text: String) -> AppResult<()> {
