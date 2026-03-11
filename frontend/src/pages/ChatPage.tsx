@@ -27,6 +27,16 @@ export const ChatPage: React.FC<ChatProps> = ({ client, username, nickname, isDa
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                if (messageListRef.current) {
+                    messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
+                }
+                if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                }
+                return;
+            }
+
             // Ignore if any input/textarea is already focused
             if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
                 return;
@@ -141,8 +151,8 @@ export const ChatPage: React.FC<ChatProps> = ({ client, username, nickname, isDa
     };
 
     return (
-        <div className="w-full h-full grid grid-rows-[25px_auto_1fr_35px] pb-safe">
-            <div className="flex justify-between items-center px-2.5 bg-[var(--header-bg)] border-b border-[var(--border-color)] text-[11px]">
+        <div className="w-full h-full flex flex-col pb-safe overflow-hidden">
+            <div className="flex-none h-[25px] flex justify-between items-center px-2.5 bg-[var(--header-bg)] border-b border-[var(--border-color)] text-[11px]">
                 <div className="flex gap-2 items-center">
                     <span className="text-[var(--accent-color)] font-bold">#{client.channelId}</span>
                     <span className="text-[var(--secondary-text-color)] opacity-70">@{username}</span>
@@ -164,12 +174,12 @@ export const ChatPage: React.FC<ChatProps> = ({ client, username, nickname, isDa
                     onClose={() => setShowSettings(false)} 
                 />
             )}
-            <div className="overflow-y-auto p-1.5 flex flex-col gap-0.5 scrollbar-thin scrollbar-thumb-[var(--border-color)] scrollbar-track-transparent" ref={messageListRef}>
+            <div className="flex-1 min-h-0 overflow-y-auto p-1.5 flex flex-col gap-0.5 scrollbar-thin scrollbar-thumb-[var(--border-color)] scrollbar-track-transparent" ref={messageListRef}>
                 {messages.map((msg) => (
                     <MessageRow key={msg.id} msg={msg} />
                 ))}
             </div>
-            <form className="h-[35px] bg-[var(--bg-color)] border-t border-[var(--border-color)] flex p-[2px_5px] gap-1.5 items-center" onSubmit={handleSubmit}>
+            <form className="flex-none h-[35px] bg-[var(--bg-color)] border-t border-[var(--border-color)] flex p-[2px_5px] gap-1.5 items-center" onSubmit={handleSubmit}>
                 <Input
                     type="text"
                     placeholder={t('chat.placeholder')}
