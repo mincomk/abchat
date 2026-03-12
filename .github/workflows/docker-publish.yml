@@ -148,6 +148,4 @@ jobs:
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
-        with:
-          args: 'Docker Build and Push for ${{ github.repository }} finished. Build: ${{ needs.build.result }}, Merge: ${{ needs.merge.result }}'
         continue-on-error: true
