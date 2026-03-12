@@ -137,3 +137,17 @@ jobs:
             $(printf '${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image }}@sha256:%s ' *)
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: [build, merge]
+    if: always() && github.event_name != 'pull_request'
+    continue-on-error: true
+    steps:
+      - name: Discord notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: 'Docker Build and Push for ${{ github.repository }} finished. Build: ${{ needs.build.result }}, Merge: ${{ needs.merge.result }}'
+        continue-on-error: true
