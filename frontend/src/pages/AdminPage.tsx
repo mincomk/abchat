@@ -242,7 +242,7 @@ export const AdminPage: React.FC<AdminProps> = ({ client, currentUsername, onBac
           </section>
         )}
         {successMsg && (
-          <div className="bg-green-900/20 text-green-500 p-2 border border-green-900/50 rounded text-[12px]">
+          <div className="bg-[var(--success-bg)] text-[var(--success-color)] p-2 border border-[var(--success-border)] rounded text-[12px]">
             {successMsg}
           </div>
         )}

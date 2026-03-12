@@ -5,6 +5,7 @@ import { Button } from '../../ui/Button';
 import { PasswordChangeCard } from './PasswordChangeCard';
 import { NotificationSettingsCard } from './NotificationSettingsCard';
 import { NicknameChangeCard } from './NicknameChangeCard';
+import { MiscSettingsCard } from './MiscSettingsCard';
 
 interface SettingsOverlayProps {
     client: DBridgeClient;
@@ -21,6 +22,7 @@ export const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ client, onClos
             <NicknameChangeCard client={client} onUpdateUser={onUpdateUser} username={username} />
             <PasswordChangeCard client={client} onSuccess={onClose} />
             <NotificationSettingsCard client={client} />
+            <MiscSettingsCard />
 
             <div className="ml-auto w-full sm:w-auto flex justify-end">
                 <Button variant="ghost" className="!h-4 !px-2 !text-[9px]" onClick={onClose}>

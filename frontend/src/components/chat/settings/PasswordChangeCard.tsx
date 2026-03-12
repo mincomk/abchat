@@ -65,7 +65,7 @@ export const PasswordChangeCard: React.FC<PasswordChangeCardProps> = ({ client, 
                 <Button type="submit" variant="ghost" className="!h-6">{t('change_pwd.submit')}</Button>
             </form>
             {pwdStatus && (
-                <div className={`text-[9px] ${pwdStatus.type === 'success' ? 'text-green-500' : 'text-[var(--error-color)]'}`}>
+                <div className={`text-[9px] ${pwdStatus.type === 'success' ? 'text-[var(--success-color)]' : 'text-[var(--error-color)]'}`}>
                     {pwdStatus.msg}
                 </div>
             )}

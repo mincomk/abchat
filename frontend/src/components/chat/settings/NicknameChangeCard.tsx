@@ -49,7 +49,7 @@ export const NicknameChangeCard: React.FC<NicknameChangeCardProps> = ({ client, 
                 <Button type="submit" variant="ghost" className="!h-6">{t('change_nickname.submit')}</Button>
             </form>
             {status && (
-                <div className={`text-[9px] ${status.type === 'success' ? 'text-green-500' : 'text-[var(--error-color)]'}`}>
+                <div className={`text-[9px] ${status.type === 'success' ? 'text-[var(--success-color)]' : 'text-[var(--error-color)]'}`}>
                     {status.msg}
                 </div>
             )}

@@ -30,6 +30,11 @@
     "permission_granted": "알림 권한이 허용되었습니다!",
     "permission_denied": "알림 권한이 거부되었습니다."
   },
+  "misc": {
+    "title": "기타",
+    "clear_cache": "캐시 삭제",
+    "clear_cache_success": "캐시가 성공적으로 삭제되었습니다!"
+  },
   "login": {
     "mode": "비밀번호/토큰 모드 전환",
     "channel_id": "채널",

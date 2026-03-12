@@ -42,11 +42,11 @@ const FormattedMessage: React.FC<{ content: string }> = ({ content }) => {
 
         let colorClass = '';
         if (prefix === '@&') {
-            colorClass = 'text-[#faa61a]'; // Role - Orange
+            colorClass = 'text-[var(--mention-role)]'; // Role
         } else if (prefix === '@') {
-            colorClass = 'text-[#00aaff]'; // User - Cyan
+            colorClass = 'text-[var(--mention-user)]'; // User
         } else if (prefix === '#') {
-            colorClass = 'text-[#a0f]';   // Channel - Purple
+            colorClass = 'text-[var(--mention-channel)]'; // Channel
         }
 
         parts.push(
@@ -71,8 +71,8 @@ export const MessageRow: React.FC<MessageRowProps> = ({ msg }) => {
     const senderColor = isSystem
         ? (msg.systemType === 'error' ? 'text-[var(--error-color)]' : 'text-[var(--accent-color)]')
         : [
-            'text-[var(--text-color)]', 'text-[#f00]', 'text-[#0f0]', 'text-[#ff0]',
-            'text-[#00f]', 'text-[#f0f]', 'text-[#0ff]', 'text-[#fa0]', 'text-[#a0f]'
+            'text-[var(--user-color-0)]', 'text-[var(--user-color-1)]', 'text-[var(--user-color-2)]', 'text-[var(--user-color-3)]',
+            'text-[var(--user-color-4)]', 'text-[var(--user-color-5)]', 'text-[var(--user-color-6)]', 'text-[var(--user-color-7)]', 'text-[var(--user-color-8)]'
         ][hashString(msg.sender!.nickname) % 9];
 
     return (

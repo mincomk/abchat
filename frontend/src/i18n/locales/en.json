@@ -30,6 +30,11 @@
     "permission_granted": "Notification permission granted!",
     "permission_denied": "Notification permission denied."
   },
+  "misc": {
+    "title": "MISC",
+    "clear_cache": "CLEAR CACHE",
+    "clear_cache_success": "Cache cleared successfully!"
+  },
   "login": {
     "mode": "Toggle Password/Token mode",
     "channel_id": "CH",

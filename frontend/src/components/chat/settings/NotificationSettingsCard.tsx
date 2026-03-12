@@ -86,7 +86,7 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
                                 key={m}
                                 variant={mode === m ? 'primary' : 'ghost'}
                                 className={`!h-5 !px-1.5 !text-[8px] ${m === 'off' && mode !== 'off' ? 'opacity-70 hover:opacity-100' : ''
-                                    } ${m === 'off' && mode === 'off' ? '!bg-red-900 !text-white' : ''}`}
+                                    } ${m === 'off' && mode === 'off' ? '!bg-[var(--error-color)] !text-white' : ''}`}
                                 onClick={() => handleModeChange(m)}
                             >
                                 {t(`notifications.mode_${m}`)}
@@ -94,7 +94,7 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
                         ))}
                     </div>
                     {mode === 'off' && (
-                        <span className="text-[7px] text-red-500 leading-tight">
+                        <span className="text-[7px] text-[var(--error-color)] leading-tight">
                             {t('notifications.off_warning')}
                         </span>
                     )}
@@ -106,7 +106,7 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
                     </div>
                 )}
                 {success && (
-                    <div className="text-[8px] text-green-500">
+                    <div className="text-[8px] text-[var(--success-color)]">
                         {success}
                     </div>
                 )}
