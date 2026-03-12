@@ -1,20 +1,24 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { DBridgeClient } from '../../../api/dbridge-api';
+import { DBridgeClient, type User } from '../../../api/dbridge-api';
 import { Button } from '../../ui/Button';
 import { PasswordChangeCard } from './PasswordChangeCard';
 import { NotificationSettingsCard } from './NotificationSettingsCard';
+import { NicknameChangeCard } from './NicknameChangeCard';
 
 interface SettingsOverlayProps {
     client: DBridgeClient;
     onClose: () => void;
+    onUpdateUser?: (user: User) => void;
+    username: string;
 }
 
-export const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ client, onClose }) => {
+export const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ client, onClose, onUpdateUser, username }) => {
     const { t } = useTranslation();
 
     return (
         <div className="bg-[var(--header-bg)] border-b border-[var(--border-color)] p-2.5 flex flex-col sm:flex-row flex-wrap gap-4 items-start">
+            <NicknameChangeCard client={client} onUpdateUser={onUpdateUser} username={username} />
             <PasswordChangeCard client={client} onSuccess={onClose} />
             <NotificationSettingsCard client={client} />
 

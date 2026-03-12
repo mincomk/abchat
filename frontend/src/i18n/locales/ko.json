@@ -2,14 +2,21 @@
   "change_pwd": {
     "title": "비밀번호 변경",
     "old": "현재 비밀번호",
-      "new": "새 비밀번호",
-      "retype": "새 비밀번호 확인",
+    "new": "새 비밀번호",
+    "retype": "새 비밀번호 확인",
     "submit": "변경",
     "cancel": "취소",
     "close": "닫기",
     "success": "비밀번호가 성공적으로 변경되었습니다!",
-      "failed": "비밀번호 변경 실패: {{error}}",
-      "mismatch": "새 비밀번호가 일치하지 않습니다"
+    "failed": "비밀번호 변경 실패: {{error}}",
+    "mismatch": "새 비밀번호가 일치하지 않습니다"
+  },
+  "change_nickname": {
+    "title": "닉네임 변경",
+    "new": "새 닉네임",
+    "submit": "변경",
+    "success": "닉네임이 성공적으로 변경되었습니다!",
+    "failed": "닉네임 변경 실패: {{error}}"
   },
   "notifications": {
     "title": "알림 설정",
@@ -69,6 +76,7 @@
       "actions": "관리",
       "delete": "삭제",
       "pwd": "비번",
+      "nick": "닉넴",
       "loading": "사용자 목록을 불러오는 중...",
       "none": "사용자가 없습니다."
     },
@@ -79,6 +87,8 @@
       "confirm_delete": "정말 사용자 \"{{username}}\"을(를) 삭제하시겠습니까?",
       "change_pwd_title": "{{username}}의 비밀번호 변경",
       "change_pwd_success": "사용자 비밀번호가 변경되었습니다!",
+      "change_nickname_title": "{{username}}의 닉네임 변경",
+      "change_nickname_success": "사용자 닉네임이 변경되었습니다!",
       "toggle_admin_success": "사용자 관리자 권한이 업데이트되었습니다!"
     }
   },

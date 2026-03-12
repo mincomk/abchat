@@ -1,6 +1,7 @@
 # ABChat
 
 ![ABChat](assets/abchat.png)
+<p><center><sup>Image by <b>@sinokadev</b></sup></center></p>
 
 ABChat은 웹에서 사용 가능한 매우 가벼운 채팅 플랫폼입니다. 이 채팅방은 Discord의 주어진 채널과 연동됩니다.
 

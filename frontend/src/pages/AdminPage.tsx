@@ -25,6 +25,10 @@ export const AdminPage: React.FC<AdminProps> = ({ client, currentUsername, onBac
   const [pwdTargetUsername, setPwdTargetUsername] = useState<string | null>(null);
   const [newPwd, setNewPwd] = useState('');
   const [retypeNewPwd, setRetypeNewPwd] = useState('');
+
+  const [nickTargetUsername, setNickTargetUsername] = useState<string | null>(null);
+  const [newNick, setNewNick] = useState('');
+
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const loadUsers = async () => {
@@ -73,6 +77,22 @@ export const AdminPage: React.FC<AdminProps> = ({ client, currentUsername, onBac
       setNewPwd('');
       setRetypeNewPwd('');
       setPwdTargetUsername(null);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleAdminChangeNickname = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nickTargetUsername) return;
+    setError(null);
+    setSuccessMsg(null);
+    try {
+      await client.adminChangeNickname(nickTargetUsername, newNick);
+      setSuccessMsg(t('admin.errors.change_nickname_success'));
+      setNewNick('');
+      setNickTargetUsername(null);
+      loadUsers();
     } catch (err: any) {
       setError(err.message);
     }
@@ -195,6 +215,32 @@ export const AdminPage: React.FC<AdminProps> = ({ client, currentUsername, onBac
             </form>
           </section>
         )}
+        {nickTargetUsername && (
+          <section className="bg-[var(--header-bg)] p-3 border border-[var(--border-color)] rounded">
+            <h3 className="mb-2 text-[var(--accent-color)] font-bold">
+              {t('admin.errors.change_nickname_title', { username: nickTargetUsername })}
+            </h3>
+            <form className="flex gap-2.5" onSubmit={handleAdminChangeNickname}>
+              <Input
+                type="text"
+                placeholder={t('admin.register.nickname')}
+                className="!h-auto !py-1 !px-1.5 flex-1"
+                value={newNick}
+                onChange={(e) => setNewNick(e.target.value)}
+                required
+              />
+              <Button type="submit" variant="ghost" className="!h-auto !py-1 !px-4">{t('change_nickname.submit')}</Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="!h-auto !py-1 !px-4"
+                onClick={() => { setNickTargetUsername(null); setNewNick(''); }}
+              >
+                {t('change_pwd.cancel')}
+              </Button>
+            </form>
+          </section>
+        )}
         {successMsg && (
           <div className="bg-green-900/20 text-green-500 p-2 border border-green-900/50 rounded text-[12px]">
             {successMsg}
@@ -215,6 +261,7 @@ export const AdminPage: React.FC<AdminProps> = ({ client, currentUsername, onBac
                 currentUsername={currentUsername} 
                 onDelete={handleDelete} 
                 onChangePassword={setPwdTargetUsername} 
+                onChangeNickname={setNickTargetUsername}
                 onToggleAdmin={handleToggleAdmin}
               />
             )}

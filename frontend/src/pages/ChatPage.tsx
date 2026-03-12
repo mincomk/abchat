@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DBridgeClient, type Message } from '../api/dbridge-api';
+import { DBridgeClient, type Message, type User } from '../api/dbridge-api';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { MessageRow, type ChatMessage } from '../components/chat/MessageRow';
@@ -14,9 +14,10 @@ interface ChatProps {
     onToggleTheme: () => void;
     onAdmin?: () => void;
     onLogout?: () => void;
+    onUpdateUser?: (user: User) => void;
 }
 
-export const ChatPage: React.FC<ChatProps> = ({ client, username, nickname, isDarkMode, onToggleTheme, onAdmin, onLogout }) => {
+export const ChatPage: React.FC<ChatProps> = ({ client, username, nickname, isDarkMode, onToggleTheme, onAdmin, onLogout, onUpdateUser }) => {
     const { t } = useTranslation();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [inputValue, setInputValue] = useState('');
@@ -172,6 +173,8 @@ export const ChatPage: React.FC<ChatProps> = ({ client, username, nickname, isDa
                 <SettingsOverlay 
                     client={client} 
                     onClose={() => setShowSettings(false)} 
+                    onUpdateUser={onUpdateUser}
+                    username={username}
                 />
             )}
             <div className="flex-1 min-h-0 overflow-y-auto p-1.5 flex flex-col gap-0.5 scrollbar-thin scrollbar-thumb-[var(--border-color)] scrollbar-track-transparent" ref={messageListRef}>

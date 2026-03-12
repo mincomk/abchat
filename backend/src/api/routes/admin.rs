@@ -5,7 +5,7 @@ use axum::{
 };
 
 use crate::{
-    AdminChangePasswordRequest, AppResult, AppState, CreateUser, UpdateUserAdminRequest, User,
+    AdminChangePasswordRequest, AppResult, AppState, CreateUser, UpdateNicknameRequest, UpdateUserAdminRequest, User,
     UserError,
     auth::{AdminUser, hash::hash_password},
 };
@@ -128,6 +128,38 @@ pub async fn admin_change_password(
 
     let new_hash = hash_password(&payload.new_password)?;
     state.persistence.set_password_hash(&username, &new_hash).await?;
+
+    Ok(StatusCode::OK)
+}
+
+#[utoipa::path(
+    post,
+    path = "/admin/accounts/{username}/nickname",
+    tag = "admin",
+    security(("bearer_auth" = [])),
+    params(("username" = String, Path, description = "Username")),
+    request_body = UpdateNicknameRequest,
+    responses(
+        (status = 200, description = "Nickname changed successfully"),
+        (status = 404, description = "User not found"),
+        (status = 401, description = "Unauthorized"),
+        (status = 403, description = "Forbidden"),
+    )
+)]
+pub async fn admin_change_nickname(
+    State(state): State<AppState>,
+    _admin: AdminUser,
+    Path(username): Path<String>,
+    Json(payload): Json<UpdateNicknameRequest>,
+) -> AppResult<StatusCode> {
+    let mut user = state
+        .persistence
+        .get_user(&username)
+        .await?
+        .ok_or(UserError::UserNotFound)?;
+
+    user.nickname = payload.nickname;
+    state.persistence.save_user(user).await?;
 
     Ok(StatusCode::OK)
 }

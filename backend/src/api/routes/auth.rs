@@ -1,7 +1,7 @@
 use axum::http::StatusCode;
 
 use crate::{
-    AppResult, AppState, ChangePasswordRequest, LoginRequest, LoginResponse, User, UserError,
+    AppResult, AppState, ChangePasswordRequest, LoginRequest, LoginResponse, UpdateNicknameRequest, User, UserError,
     auth::{AuthError, hash::{hash_password, verify_password}, jwt::sign_token},
 };
 use axum::{Json, extract::State};
@@ -68,6 +68,28 @@ pub async fn change_password_handler(
 
     let new_hash = hash_password(&payload.new_password)?;
     state.persistence.set_password_hash(&user.username, &new_hash).await?;
+
+    Ok(StatusCode::OK)
+}
+
+#[utoipa::path(
+    post,
+    path = "/auth/change-nickname",
+    tag = "auth",
+    security(("bearer_auth" = [])),
+    request_body = UpdateNicknameRequest,
+    responses(
+        (status = 200, description = "Nickname changed successfully"),
+        (status = 401, description = "Unauthorized"),
+    )
+)]
+pub async fn change_nickname_handler(
+    State(state): State<AppState>,
+    mut user: User,
+    Json(payload): Json<UpdateNicknameRequest>,
+) -> AppResult<StatusCode> {
+    user.nickname = payload.nickname;
+    state.persistence.save_user(user).await?;
 
     Ok(StatusCode::OK)
 }

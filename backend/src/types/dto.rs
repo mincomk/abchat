@@ -22,6 +22,11 @@ pub struct ChangePasswordRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct UpdateNicknameRequest {
+    pub nickname: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct AdminChangePasswordRequest {
     pub new_password: String,
 }

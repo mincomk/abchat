@@ -2,14 +2,21 @@
   "change_pwd": {
     "title": "CHANGE PASSWORD",
     "old": "OLD PWD",
-      "new": "NEW PWD",
-      "retype": "RETYPE NEW PWD",
+    "new": "NEW PWD",
+    "retype": "RETYPE NEW PWD",
     "submit": "CHANGE",
     "cancel": "CANCEL",
     "close": "CLOSE",
     "success": "Password changed successfully!",
-      "failed": "Failed to change password: {{error}}",
-      "mismatch": "New passwords do not match"
+    "failed": "Failed to change password: {{error}}",
+    "mismatch": "New passwords do not match"
+  },
+  "change_nickname": {
+    "title": "CHANGE NICKNAME",
+    "new": "NEW NICKNAME",
+    "submit": "CHANGE",
+    "success": "Nickname changed successfully!",
+    "failed": "Failed to change nickname: {{error}}"
   },
   "notifications": {
     "title": "NOTIFICATION SETTINGS",
@@ -69,6 +76,7 @@
       "actions": "Actions",
       "delete": "DELETE",
       "pwd": "PWD",
+      "nick": "NICK",
       "loading": "Loading users...",
       "none": "No users found."
     },
@@ -79,6 +87,8 @@
       "confirm_delete": "Are you sure you want to delete user \"{{username}}\"?",
       "change_pwd_title": "CHANGE PASSWORD FOR {{username}}",
       "change_pwd_success": "User password changed successfully!",
+      "change_nickname_title": "CHANGE NICKNAME FOR {{username}}",
+      "change_nickname_success": "User nickname changed successfully!",
       "toggle_admin_success": "User admin status updated successfully!"
     }
   },

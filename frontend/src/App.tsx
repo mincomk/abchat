@@ -67,7 +67,7 @@ const App: React.FC = () => {
         } catch (error: any) {
             setError(`${error.message}`);
         }
-    }, [location.pathname, navigate]);
+    }, [location.pathname, navigate, user?.is_admin]);
 
     const handleLogout = useCallback(() => {
         if (clientRef.current) {
@@ -112,6 +112,10 @@ const App: React.FC = () => {
         navigate('/');
     }, [navigate]);
 
+    const handleUpdateUser = useCallback((updatedUser: User) => {
+        setUser(updatedUser);
+    }, []);
+
     useEffect(() => {
         if (location.pathname === '/admin' && user && !user.is_admin) {
             navigate('/');
@@ -140,6 +144,7 @@ const App: React.FC = () => {
                                 onToggleTheme={toggleTheme}
                                 onAdmin={user.is_admin ? handleAdminClick : undefined}
                                 onLogout={handleLogout}
+                                onUpdateUser={handleUpdateUser}
                             />
                         }
                     />

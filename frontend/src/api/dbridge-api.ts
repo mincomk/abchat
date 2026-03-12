@@ -106,6 +106,15 @@ export class DBridgeClient {
         localStorage.setItem(`dbridge_auth_${this.#channelId}`, JSON.stringify({ token, nickname, username, is_admin }));
     }
 
+    updateStoredNickname(nickname: string) {
+        this.#nickname = nickname;
+        const stored = this.getStoredCredentials();
+        if (stored) {
+            stored.nickname = nickname;
+            localStorage.setItem(`dbridge_auth_${this.#channelId}`, JSON.stringify(stored));
+        }
+    }
+
     getStoredCredentials() {
         const stored = localStorage.getItem(`dbridge_auth_${this.#channelId}`);
         if (stored) {
@@ -195,6 +204,23 @@ export class DBridgeClient {
         }
     }
 
+    async updateNickname(nickname: string): Promise<void> {
+        if (!this.#token) throw new Error('Not authenticated');
+
+        try {
+            await this.#axios.post('auth/change-nickname', { nickname });
+            this.updateStoredNickname(nickname);
+        } catch (error) {
+            let message = 'Unknown error';
+            if (isAxiosError(error)) {
+                message = error.response?.data?.message || error.response?.data || error.message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
+            throw new Error(`Failed to change nickname: ${message}`);
+        }
+    }
+
     async adminChangePassword(username: string, new_password: string): Promise<void> {
         if (!this.#token) throw new Error('Not authenticated');
 
@@ -208,6 +234,22 @@ export class DBridgeClient {
                 message = error.message;
             }
             throw new Error(`Failed to change user password: ${message}`);
+        }
+    }
+
+    async adminChangeNickname(username: string, nickname: string): Promise<void> {
+        if (!this.#token) throw new Error('Not authenticated');
+
+        try {
+            await this.#axios.post(`admin/accounts/${username}/nickname`, { nickname });
+        } catch (error) {
+            let message = 'Unknown error';
+            if (isAxiosError(error)) {
+                message = error.response?.data?.message || error.response?.data || error.message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
+            throw new Error(`Failed to change user nickname: ${message}`);
         }
     }
 

@@ -8,10 +8,11 @@ interface UserTableProps {
   currentUsername: string;
   onDelete: (username: string) => void;
   onChangePassword: (username: string) => void;
+  onChangeNickname: (username: string) => void;
   onToggleAdmin: (username: string, is_admin: boolean) => void;
 }
 
-export const UserTable: React.FC<UserTableProps> = ({ users, currentUsername, onDelete, onChangePassword, onToggleAdmin }) => {
+export const UserTable: React.FC<UserTableProps> = ({ users, currentUsername, onDelete, onChangePassword, onChangeNickname, onToggleAdmin }) => {
   const { t } = useTranslation();
   return (
     <table className="w-full border-collapse mt-2.5">
@@ -41,6 +42,9 @@ export const UserTable: React.FC<UserTableProps> = ({ users, currentUsername, on
               <div className="flex gap-1">
                 <Button variant="secondary" className="!text-[10px] !h-auto !py-0.5 !px-1.5" onClick={() => onChangePassword(user.username)}>
                   {t('admin.accounts.pwd')}
+                </Button>
+                <Button variant="secondary" className="!text-[10px] !h-auto !py-0.5 !px-1.5" onClick={() => onChangeNickname(user.username)}>
+                  {t('admin.accounts.nick')}
                 </Button>
                 {user.username !== currentUsername && (
                   <Button variant="danger" className="!text-[10px] !h-auto !py-0.5 !px-1.5" onClick={() => onDelete(user.username)}>
