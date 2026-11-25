@@ -3,8 +3,10 @@ FROM node:22-alpine AS builder
 
 WORKDIR /usr/src/frontend
 
-# Install pnpm
-RUN corepack enable pnpm
+# Install pnpm (pinned: pnpm 12 stopped reading `pnpm.overrides` from package.json,
+# which makes `--frozen-lockfile` fail with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
+# The bot image pins the same version.)
+RUN npm install -g pnpm@10.26.1
 
 # Copy package files
 COPY package.json pnpm-lock.yaml* ./
