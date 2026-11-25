@@ -87,7 +87,63 @@ html, body {
   box-sizing: border-box;
 }
 
-form {
-  margin: 0;
-  padding: 0;
+/*
+ * No global reset for `form`: unlayered rules here beat every Tailwind utility,
+ * and earlier `form { margin: 0; padding: 0 }` silently zeroed the chat composer's
+ * padding and the login form's `mx-auto`. Browsers give a form no margin or padding
+ * to reset anyway.
+ */
+
+/* Safe-area utilities (notch / round display insets). */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/*
+ * Wear OS / round watch screens (Galaxy Watch 396x396, 450x450, 480x480).
+ *
+ * The desktop UI is deliberately dense (9-10px type, 20px-high controls), which is
+ * unreadable and untappable on a ~40mm watch face. `useWatchLayout()` switches the
+ * components to their compact layouts; this block gives every control a finger-sized
+ * target and keeps text legible at arm's length.
+ */
+@media (max-width: 460px) and (max-height: 460px) {
+  html, body {
+    font-size: 15px;
+  }
+
+  .watch-tap {
+    min-height: 38px !important;
+    min-width: 38px !important;
+    font-size: 13px !important;
+  }
+
+  /* Keep the top and bottom rows clear of the bezel's corners. */
+  .watch-inset {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+
+  /* Settings cards: the whole panel is text at 8-10px on desktop. */
+  .watch-panel {
+    font-size: 13px;
+  }
+
+  .watch-panel :is(input, button) {
+    min-height: 34px;
+    font-size: 13px !important;
+  }
+
+  .watch-panel :is(section, div, span, label) {
+    font-size: 13px;
+  }
+}
+
+/* Round displays that report the CSS `shape` media feature need more inset than
+ * a square one; browsers that do not know the feature skip this block. */
+@media (shape: round) and (max-width: 460px) {
+  .watch-inset {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
 }

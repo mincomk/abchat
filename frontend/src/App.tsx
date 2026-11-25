@@ -4,10 +4,12 @@ import { LoginPage as Login, type LoginData } from './pages/LoginPage';
 import { ChatPage as Chat } from './pages/ChatPage';
 import { AdminPage as Admin } from './pages/AdminPage';
 import { DBridgeClient, type User } from './api/dbridge-api';
+import { useWatchLayout } from './hooks/useWatchLayout';
 
 const App: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const isWatch = useWatchLayout();
     const [user, setUser] = useState<User | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
@@ -164,9 +166,11 @@ const App: React.FC = () => {
                     />
                 </Routes>
             )}
-            <div className="fixed bottom-0.5 right-0.5 text-[12px] text-[var(--secondary-text-color)] pointer-events-none z-[9999]">
-                {windowSize.width}x{windowSize.height}
-            </div>
+            {!isWatch && (
+                <div className="fixed bottom-0.5 right-0.5 text-[12px] text-[var(--secondary-text-color)] pointer-events-none z-[9999]">
+                    {windowSize.width}x{windowSize.height}
+                </div>
+            )}
         </div>
     );
 }
