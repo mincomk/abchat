@@ -10,10 +10,14 @@ export interface ChatMessage {
     };
     content: string;
     timestamp: number;
+    /** Progress chatter (loading/joining) that the watch layout hides. */
+    quiet?: boolean;
 }
 
 interface MessageRowProps {
     msg: ChatMessage;
+    /** Watch layout: drop the timestamp/nickname columns and run the message inline. */
+    compact?: boolean;
 }
 
 const hashString = (str: string): number => {
@@ -65,7 +69,7 @@ const FormattedMessage: React.FC<{ content: string }> = ({ content }) => {
     return <>{parts.length > 0 ? parts : content}</>;
 };
 
-export const MessageRow: React.FC<MessageRowProps> = ({ msg }) => {
+export const MessageRow: React.FC<MessageRowProps> = ({ msg, compact = false }) => {
     const isSystem = msg.type === 'system';
 
     const senderColor = isSystem
@@ -74,6 +78,24 @@ export const MessageRow: React.FC<MessageRowProps> = ({ msg }) => {
             'text-[var(--user-color-0)]', 'text-[var(--user-color-1)]', 'text-[var(--user-color-2)]', 'text-[var(--user-color-3)]',
             'text-[var(--user-color-4)]', 'text-[var(--user-color-5)]', 'text-[var(--user-color-6)]', 'text-[var(--user-color-7)]', 'text-[var(--user-color-8)]'
         ][hashString(msg.sender!.nickname) % 9];
+
+    if (compact) {
+        return (
+            <div className="leading-snug break-words">
+                {isSystem ? (
+                    <span className={`text-[11px] ${senderColor}`}>
+                        <FormattedMessage content={msg.content} />
+                    </span>
+                ) : (
+                    <>
+                        <span className={`font-bold ${senderColor}`}>{msg.sender!.nickname}</span>
+                        <span className="text-[var(--secondary-text-color)]"> </span>
+                        <FormattedMessage content={msg.content} />
+                    </>
+                )}
+            </div>
+        );
+    }
 
     return (
         <div className="flex gap-1.5 leading-tight">

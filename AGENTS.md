@@ -20,6 +20,11 @@ DBridge is a message bridging engine designed to connect multiple communication 
     - `src/pages/`: Main screen components.
     - `src/components/`: Reusable UI elements (ui/, chat/, admin/).
     - `src/i18n/locales/`: Translation files (`en.json`, `ko.json`).
+    - `src/hooks/useWatchLayout.ts`: watch layout detection for Wear OS / Galaxy Watch
+      (square viewports of 460x460 or smaller). Components that support a watch render a
+      second, compact layout behind this hook and use the `watch-tap` / `watch-inset` /
+      `watch-panel` classes in `index.css`; `docs/WATCH.md` describes the layout and how to
+      preview it (`frontend/watch-preview.html`).
     - `src/App.tsx`: Main entry point with React Router v7 navigation.
 - `docker-compose.yml`: Main orchestration for development and deployment.
 
